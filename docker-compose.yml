@@ -4,6 +4,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      DB_DATABASE: 'db'
+      DB_USER: 'user'
+      DB_PASSWORD: 'password'
+      DB_ADDRESS: 'db:3306'
     depends_on:
       - db
     ports:
