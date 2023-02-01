@@ -35,6 +35,13 @@ func NewApiService(
 	}
 }
 
+func valueOrDefault[V any](value *V) V {
+	if value == nil {
+		return *new(V)
+	}
+	return *value
+}
+
 // LoginPost -
 func (s *ApiService) LoginPost(ctx context.Context, loginPostRequest openapi.LoginPostRequest) (openapi.ImplResponse, error) {
 	user, err := s.storage.UserGet(ctx, loginPostRequest.Id)
@@ -77,9 +84,9 @@ func (s *ApiService) UserGetIdGet(ctx context.Context, id string) (openapi.ImplR
 		Id:         user.ID,
 		FirstName:  user.FirstName,
 		SecondName: user.SecondName,
-		Age:        user.Age,
-		Biography:  user.Biography,
-		City:       user.City,
+		Age:        valueOrDefault(user.Age),
+		Biography:  valueOrDefault(user.Biography),
+		City:       valueOrDefault(user.City),
 	}), nil
 }
 
@@ -93,9 +100,9 @@ func (s *ApiService) UserRegisterPost(ctx context.Context, user openapi.UserRegi
 	id, err := s.storage.UserRegister(ctx, models.User{
 		FirstName:    user.FirstName,
 		SecondName:   user.SecondName,
-		Age:          user.Age,
-		Biography:    user.Biography,
-		City:         user.City,
+		Age:          &user.Age,
+		Biography:    &user.Biography,
+		City:         &user.City,
 		PasswordHash: password,
 	})
 	if err != nil {
@@ -107,6 +114,10 @@ func (s *ApiService) UserRegisterPost(ctx context.Context, user openapi.UserRegi
 
 // UserSearchGet -
 func (s *ApiService) UserSearchGet(ctx context.Context, firstName string, lastName string) (openapi.ImplResponse, error) {
+	if firstName == "" && lastName == "" {
+		return openapi.Response(400, "last_name or first_name should not be empty"), nil
+	}
+
 	users, err := s.storage.UserSearch(ctx, firstName, lastName)
 	if err != nil {
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
@@ -118,9 +129,9 @@ func (s *ApiService) UserSearchGet(ctx context.Context, firstName string, lastNa
 			Id:         users[i].ID,
 			FirstName:  users[i].FirstName,
 			SecondName: users[i].SecondName,
-			Age:        users[i].Age,
-			Biography:  users[i].Biography,
-			City:       users[i].City,
+			Age:        valueOrDefault(users[i].Age),
+			Biography:  valueOrDefault(users[i].Biography),
+			City:       valueOrDefault(users[i].City),
 		})
 	}
 

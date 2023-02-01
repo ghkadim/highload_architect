@@ -76,7 +76,7 @@ func (s *Storage) UserGet(ctx context.Context, id string) (models.User, error) {
 func (s *Storage) UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error) {
 	rows, err := s.db.Query(
 		"SELECT bin_to_uuid(uuid), first_name, second_name, age, biography, city FROM users "+
-			"WHERE first_name = ? AND second_name = ?", firstName, secondName)
+			"WHERE first_name LIKE ? AND second_name LIKE ?", firstName+"%", secondName+"%")
 	if err != nil {
 		return nil, fmt.Errorf("userSearch %s %s: %v", firstName, secondName, err)
 	}

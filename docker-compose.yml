@@ -30,5 +30,7 @@ services:
     volumes:
       - my-db:/var/lib/mysql
       - ${PWD}/db:/docker-entrypoint-initdb.d
+      - ${PWD}/db/people.csv:/var/lib/mysql-files/people.csv
+      - ${PWD}/db/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
 volumes:
   my-db:
