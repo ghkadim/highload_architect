@@ -16,4 +16,5 @@
 
 .idea
 .local/
+.DS_Store
 bin/
