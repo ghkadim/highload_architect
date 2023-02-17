@@ -1,5 +1,5 @@
 BINARY_NAME=bin/app
-COMPOSE="docker-compose.yaml"
+COMPOSE="docker-compose.yml"
 
 build:
 	GOARCH=amd64 go build -o ${BINARY_NAME} main.go
@@ -25,8 +25,16 @@ compose_clean:
 	docker-compose -f ${COMPOSE} down
 	docker volume ls -q | grep highload_architect | xargs docker volume rm
 
+test_api:
+	pytest test/api
+
 generate:
 	openapi-generator generate \
 		-i ./api/openapi.json \
 		-g go-server \
-		-o ./generated
+		-o ./generated/go_server
+	openapi-generator generate \
+		-i ./api/openapi.json \
+		-g python-prior \
+		-o ./generated/python_client
+	python3 generated/patch_go_server.py | gofmt | tee "generated/go_server/go/authorize_routes.go"

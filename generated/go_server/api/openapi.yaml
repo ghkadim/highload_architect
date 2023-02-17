@@ -1,0 +1,892 @@
+openapi: 3.0.0
+info:
+  title: OTUS Highload Architect
+  version: 1.2.0
+servers:
+- url: /
+paths:
+  /login:
+    post:
+      description: Упрощенный процесс аутентификации путем передачи идентификатор
+        пользователя и получения токена для дальнейшего прохождения авторизации
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_login_post_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_200_response'
+          description: Успешная аутентификация
+        "400":
+          description: Невалидные данные
+        "404":
+          description: Пользователь не найден
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+  /user/register:
+    post:
+      description: Регистрация нового пользователя
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_user_register_post_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_user_register_post_200_response'
+          description: Успешная регистрация
+        "400":
+          description: Невалидные данные
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+  /user/get/{id}:
+    get:
+      description: Получение анкеты пользователя
+      parameters:
+      - description: Идентификатор пользователя
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/UserId'
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Успешное получение анкеты пользователя
+        "400":
+          description: Невалидные данные
+        "404":
+          description: Анкета не найдена
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+  /user/search:
+    get:
+      description: Поиск анкет
+      parameters:
+      - description: Условие поиска по имени
+        explode: true
+        in: query
+        name: first_name
+        required: true
+        schema:
+          description: Часть имени для поиска
+          example: Конст
+          type: string
+        style: form
+      - description: Условие поиска по фамилии
+        explode: true
+        in: query
+        name: last_name
+        required: true
+        schema:
+          description: Часть фамилии для поиска
+          example: Оси
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/User'
+                type: array
+          description: Успешные поиск пользователя
+        "400":
+          description: Невалидные данные
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+  /friend/set/{user_id}:
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/UserId'
+        style: simple
+      responses:
+        "200":
+          description: Пользователь успешно указал своего друга
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
+  /friend/delete/{user_id}:
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/UserId'
+        style: simple
+      responses:
+        "200":
+          description: Пользователь успешно удалил из друзей пользователя
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
+  /post/create:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_post_create_post_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostId'
+          description: Успешно создан пост
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
+  /post/update:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_post_update_put_request'
+      responses:
+        "200":
+          description: Успешно изменен пост
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
+  /post/delete/{id}:
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/PostId'
+        style: simple
+      responses:
+        "200":
+          description: Успешно удален пост
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
+  /post/get/{id}:
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/PostId'
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: Успешно получен пост
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+  /post/feed:
+    get:
+      parameters:
+      - explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          default: 0
+          description: Оффсет с которого начинать выдачу
+          example: 100
+          minimum: 0
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          description: "Лимит, ограничивающий кол-во возвращенных сущностей"
+          example: 10
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Post'
+                type: array
+          description: Успешно получены посты друзей
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
+  /dialog/{user_id}/send:
+    post:
+      parameters:
+      - explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/UserId'
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_dialog__user_id__send_post_request'
+      responses:
+        "200":
+          description: Успешно отправлено сообщение
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
+  /dialog/{user_id}/list:
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/UserId'
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/DialogMessage'
+                type: array
+          description: Диалог между двумя пользователями
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_login_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
+components:
+  responses:
+    "400":
+      description: Невалидные данные ввода
+    "401":
+      description: Неавторизованный доступ
+    "5xx":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/_login_post_500_response'
+      description: Ошибка сервера
+      headers:
+        Retry-After:
+          description: "Время, через которое еще раз нужно сделать запрос"
+          explode: false
+          required: false
+          schema:
+            type: integer
+          style: simple
+  schemas:
+    UserId:
+      description: Идентификатор пользователя
+      example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+      type: string
+    User:
+      example:
+        city: Москва
+        second_name: Фамилия
+        id: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+        biography: "Хобби, интересы и т.п."
+        first_name: Имя
+        age: 18
+      properties:
+        id:
+          description: Идентификатор пользователя
+          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+          type: string
+        first_name:
+          description: Имя
+          example: Имя
+          type: string
+        second_name:
+          description: Фамилия
+          example: Фамилия
+          type: string
+        age:
+          description: Возраст
+          example: 18
+          type: integer
+        biography:
+          description: Интересы
+          example: "Хобби, интересы и т.п."
+          type: string
+        city:
+          description: Город
+          example: Москва
+          type: string
+      type: object
+    PostId:
+      description: Идентификатор поста
+      example: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+      type: string
+    PostText:
+      description: Текст поста
+      example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod\
+        \ tempor incididunt ut labore et dolore magna aliqua. Lectus mauris ultrices\
+        \ eros in cursus turpis massa."
+      type: string
+    DialogMessageText:
+      description: Текст сообщения
+      example: "Привет, как дела?"
+      type: string
+    DialogMessage:
+      example:
+        from: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+        to: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+        text: "Привет, как дела?"
+      properties:
+        from:
+          description: Идентификатор пользователя
+          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+          type: string
+        to:
+          description: Идентификатор пользователя
+          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+          type: string
+        text:
+          description: Текст сообщения
+          example: "Привет, как дела?"
+          type: string
+      required:
+      - from
+      - text
+      - to
+      type: object
+    Post:
+      description: Пост пользователя
+      example:
+        author_user_id: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+        id: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod\
+          \ tempor incididunt ut labore et dolore magna aliqua. Lectus mauris ultrices\
+          \ eros in cursus turpis massa."
+      properties:
+        id:
+          description: Идентификатор поста
+          example: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+          type: string
+        text:
+          description: Текст поста
+          example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do\
+            \ eiusmod tempor incididunt ut labore et dolore magna aliqua. Lectus mauris\
+            \ ultrices eros in cursus turpis massa."
+          type: string
+        author_user_id:
+          description: Идентификатор пользователя
+          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+          type: string
+      type: object
+    _login_post_request:
+      properties:
+        id:
+          example: "234"
+          type: string
+        password:
+          example: Секретная строка
+          type: string
+      type: object
+    _login_post_200_response:
+      example:
+        token: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+      properties:
+        token:
+          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+          type: string
+      type: object
+    _login_post_500_response:
+      properties:
+        message:
+          description: Описание ошибки
+          type: string
+        request_id:
+          description: Идентификатор запроса. Предназначен для более быстрого поиска
+            проблем.
+          type: string
+        code:
+          description: Код ошибки. Предназначен для классификации проблем и более
+            быстрого решения проблем.
+          type: integer
+      required:
+      - message
+      type: object
+    _user_register_post_request:
+      properties:
+        first_name:
+          example: Имя
+          type: string
+        second_name:
+          example: Фамилия
+          type: string
+        age:
+          example: 18
+          type: integer
+        biography:
+          example: "Хобби, интересы и т.п."
+          type: string
+        city:
+          example: Москва
+          type: string
+        password:
+          example: Секретная строка
+          type: string
+      type: object
+    _user_register_post_200_response:
+      example:
+        user_id: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+      properties:
+        user_id:
+          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+          type: string
+      type: object
+    _post_create_post_request:
+      properties:
+        text:
+          description: Текст поста
+          example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do\
+            \ eiusmod tempor incididunt ut labore et dolore magna aliqua. Lectus mauris\
+            \ ultrices eros in cursus turpis massa."
+          type: string
+      required:
+      - text
+      type: object
+    _post_update_put_request:
+      properties:
+        id:
+          description: Идентификатор поста
+          example: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+          type: string
+        text:
+          description: Текст поста
+          example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do\
+            \ eiusmod tempor incididunt ut labore et dolore magna aliqua. Lectus mauris\
+            \ ultrices eros in cursus turpis massa."
+          type: string
+      required:
+      - id
+      - text
+      type: object
+    _dialog__user_id__send_post_request:
+      properties:
+        text:
+          description: Текст сообщения
+          example: "Привет, как дела?"
+          type: string
+      required:
+      - text
+      type: object
+  securitySchemes:
+    bearerAuth:
+      description: "Авторизация по токену, который был получен в методе /login"
+      scheme: bearer
+      type: http

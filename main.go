@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	openapi "github.com/ghkadim/highload_architect/generated/go"
+	openapi "github.com/ghkadim/highload_architect/generated/go-server/go"
 	"github.com/ghkadim/highload_architect/internal/service"
 )
 
