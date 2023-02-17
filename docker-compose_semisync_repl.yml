@@ -1,0 +1,58 @@
+version: '3.3'
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
+      - ${PWD}/db/people.csv:/var/lib/mysql-files/people.csv
+      - ${PWD}/db/semisync/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+    networks:
+      - backend
+  db_replica_1:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+    depends_on:
+      - db
+    ports:
+      - '3307:3306'
+    expose:
+      - '3307'
+    volumes:
+      - my-db-replica_1:/var/lib/mysql
+      - ${PWD}/db/semisync/mysql_replica_1.cnf:/etc/mysql/conf.d/mysql.cnf
+    networks:
+      - backend
+  db_replica_2:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+    depends_on:
+      - db
+    ports:
+      - '3308:3306'
+    expose:
+      - '3308'
+    volumes:
+      - my-db-replica_2:/var/lib/mysql
+      - ${PWD}/db/semisync/mysql_replica_2.cnf:/etc/mysql/conf.d/mysql.cnf
+    networks:
+      - backend
+networks:
+  backend:
+volumes:
+  my-db:
+  my-db-replica_1:
+  my-db-replica_2:

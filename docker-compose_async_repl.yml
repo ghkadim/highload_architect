@@ -9,12 +9,16 @@ services:
       DB_USER: 'user'
       DB_PASSWORD: 'password'
       DB_ADDRESS: 'db:3306'
+      DB_REPLICA_ADDRESSES: 'db_replica:3306'
     depends_on:
       - db
+      - db_replica
     ports:
       - '8080:8080'
     expose:
       - '8080'
+    networks:
+      - backend
   db:
     image: mysql:8.0
     restart: always
@@ -29,9 +33,31 @@ services:
       - '3306'
     volumes:
       - my-db:/var/lib/mysql
-      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ${PWD}/db/02_load_people.sql:/docker-entrypoint-initdb.d/02_load_people.sql
       - ${PWD}/db/people.csv:/var/lib/mysql-files/people.csv
-      - ${PWD}/db/single/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+      - ${PWD}/db/async/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+    networks:
+      - backend
+  db_replica:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    depends_on:
+      - db
+    ports:
+      - '3307:3306'
+    expose:
+      - '3307'
+    volumes:
+      - my-db-replica:/var/lib/mysql
+      - ${PWD}/db/async/mysql_replica.cnf:/etc/mysql/conf.d/mysql.cnf
+    networks:
+      - backend
+networks:
+  backend:
 volumes:
   my-db:
+  my-db-replica:

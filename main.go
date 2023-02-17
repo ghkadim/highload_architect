@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	openapi "github.com/ghkadim/highload_architect/generated/go"
 	"github.com/ghkadim/highload_architect/internal/service"
@@ -22,7 +23,7 @@ func getenv(variable, defaultValue string) string {
 func main() {
 	log.Print("Server started")
 
-	storage, err := mysql.NewStorage(
+	master, err := mysql.NewStorage(
 		getenv("DB_USER", "user"),
 		getenv("DB_PASSWORD", "password"),
 		getenv("DB_ADDRESS", "127.0.0.1:3306"),
@@ -32,8 +33,24 @@ func main() {
 		log.Fatal("failed to init db")
 	}
 
+	slaves := make([]service.Storage, 0)
+	for _, address := range strings.Split(getenv("DB_REPLICA_ADDRESSES", ""), ",") {
+		slave, err := mysql.NewStorage(
+			getenv("DB_USER", "user"),
+			getenv("DB_PASSWORD", "password"),
+			address,
+			getenv("DB_DATABASE", "db"),
+		)
+		if err != nil {
+			log.Fatal("failed to init slave db")
+		}
+
+		slaves = append(slaves, slave)
+	}
+
 	DefaultApiService := service.NewApiService(
-		storage,
+		master,
+		slaves,
 		session.NewSession(
 			getenv("SESSION_KEY", "secret"),
 		),

@@ -5,6 +5,7 @@ import (
 	"errors"
 	openapi "github.com/ghkadim/highload_architect/generated/go"
 	"github.com/ghkadim/highload_architect/internal/models"
+	"sync/atomic"
 )
 
 type Storage interface {
@@ -20,18 +21,22 @@ type Session interface {
 }
 
 type ApiService struct {
-	storage Storage
-	session Session
+	master     Storage
+	replicas   []Storage
+	replicaNum atomic.Int32
+	session    Session
 }
 
 // NewApiService creates an api service
 func NewApiService(
-	storage Storage,
+	master Storage,
+	replicas []Storage,
 	session Session,
 ) *ApiService {
 	return &ApiService{
-		storage: storage,
-		session: session,
+		master:   master,
+		replicas: replicas,
+		session:  session,
 	}
 }
 
@@ -42,9 +47,16 @@ func valueOrDefault[V any](value *V) V {
 	return *value
 }
 
+func (s *ApiService) readStorage() Storage {
+	if len(s.replicas) != 0 {
+		return s.replicas[int(s.replicaNum.Add(1))%len(s.replicas)]
+	}
+	return s.master
+}
+
 // LoginPost -
 func (s *ApiService) LoginPost(ctx context.Context, loginPostRequest openapi.LoginPostRequest) (openapi.ImplResponse, error) {
-	user, err := s.storage.UserGet(ctx, loginPostRequest.Id)
+	user, err := s.master.UserGet(ctx, loginPostRequest.Id)
 	if err != nil {
 		if errors.Is(err, models.UserNotFound) {
 			return openapi.Response(404, nil), nil
@@ -71,7 +83,7 @@ func (s *ApiService) LoginPost(ctx context.Context, loginPostRequest openapi.Log
 
 // UserGetIdGet -
 func (s *ApiService) UserGetIdGet(ctx context.Context, id string) (openapi.ImplResponse, error) {
-	user, err := s.storage.UserGet(ctx, id)
+	user, err := s.readStorage().UserGet(ctx, id)
 	if err != nil {
 		if errors.Is(err, models.UserNotFound) {
 			return openapi.Response(404, nil), nil
@@ -97,7 +109,7 @@ func (s *ApiService) UserRegisterPost(ctx context.Context, user openapi.UserRegi
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}
 
-	id, err := s.storage.UserRegister(ctx, models.User{
+	id, err := s.master.UserRegister(ctx, models.User{
 		FirstName:    user.FirstName,
 		SecondName:   user.SecondName,
 		Age:          &user.Age,
@@ -118,7 +130,7 @@ func (s *ApiService) UserSearchGet(ctx context.Context, firstName string, lastNa
 		return openapi.Response(400, "last_name or first_name should not be empty"), nil
 	}
 
-	users, err := s.storage.UserSearch(ctx, firstName, lastName)
+	users, err := s.readStorage().UserSearch(ctx, firstName, lastName)
 	if err != nil {
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}
