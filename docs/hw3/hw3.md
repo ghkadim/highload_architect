@@ -8,9 +8,16 @@
    
 3. Настраиваем репликацию скриптом
    ```
-   db/replication_init.sh
+   db/async/replication_init.sh
    ```
-   
+
+4. Создаем схему бд и наполняем таблицу
+
+   ```
+   docker exec -i highload_architect-db-1 mysql -t -uroot -ppassword db < db/01_schema.sql
+   docker exec -i highload_architect-db-1 mysql -t -uroot -ppassword db < db/02_load_people.sql
+   ```
+
 5. Запускаем jmeter c нагрузкой на /user/get/{id} и /user/search ``jmeter -t test/Test\ Plan.jmx``
 6. Проверяем потребление ресурсов ``docker stats``
 ```
