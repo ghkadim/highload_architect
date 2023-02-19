@@ -3,10 +3,15 @@ package session
 import (
 	"context"
 	"errors"
-	"github.com/ghkadim/highload_architect/internal/models"
+	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 	"time"
+)
+
+var (
+	ErrTokenExpired = errors.New("token expired")
+	ErrBadUserId    = errors.New("bad user id")
 )
 
 type Session struct {
@@ -34,11 +39,26 @@ func (s *Session) CompareHashAndPassword(ctx context.Context, hash []byte, passw
 	return true, nil
 }
 
-func (s *Session) TokenForUser(ctx context.Context, user models.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId": user.ID,
-		"nbf":    time.Now().Add(time.Hour * 24).Unix(),
+func (s *Session) TokenForUser(ctx context.Context, userID string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		Subject:   userID,
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 	})
 
 	return token.SignedString(s.key)
+}
+
+func (s *Session) ParseToken(ctx context.Context, tokenStr string) (string, error) {
+	claims := &jwt.RegisteredClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return s.key, nil
+	})
+	if token.Valid {
+		return claims.Subject, nil
+	} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
+		return "", ErrTokenExpired
+	} else {
+		return "", fmt.Errorf("invalid token: %w", err)
+	}
 }

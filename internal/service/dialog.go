@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	openapi "github.com/ghkadim/highload_architect/generated/go-server/go"
+	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
 	"net/http"
 )
 

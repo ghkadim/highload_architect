@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	openapi "github.com/ghkadim/highload_architect/generated/go-server/go"
+	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
 	"github.com/ghkadim/highload_architect/internal/models"
 )
 
@@ -26,7 +26,7 @@ func (s *ApiService) LoginPost(ctx context.Context, loginPostRequest openapi.Log
 		return openapi.Response(404, nil), err
 	}
 
-	token, err := s.session.TokenForUser(ctx, user)
+	token, err := s.session.TokenForUser(ctx, user.ID)
 	if err != nil {
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}

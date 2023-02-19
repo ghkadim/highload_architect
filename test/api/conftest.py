@@ -13,24 +13,25 @@ def configure_app_host():
 
 
 @pytest.fixture()
-def register(configure_app_host):
-    api = default_api.DefaultApi()
-    resp = api.user_register_post(
-        user_register_post_request=UserRegisterPostRequest(
-            first_name="first_name",
-            second_name="second_name",
-            password="password",
-        ))
-
-    return resp
+def make_user():
+    def _make_user(first_name="first_name", second_name="second_name", password="password", **kwargs):
+        api = default_api.DefaultApi()
+        return api.user_register_post(
+            user_register_post_request=UserRegisterPostRequest(
+                first_name=first_name,
+                second_name=second_name,
+                password=password,
+                **kwargs,
+            ))
+    return _make_user
 
 
 @pytest.fixture()
-def login(register):
+def login(make_user):
     api = default_api.DefaultApi()
     resp = api.login_post(
         login_post_request=LoginPostRequest(
-            id=register.user_id,
+            id=make_user().user_id,
             password="password",
         ))
 

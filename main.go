@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/ghkadim/highload_architect/internal/controller"
 	"github.com/ghkadim/highload_architect/internal/mysql"
 	"github.com/ghkadim/highload_architect/internal/session"
 	"log"
@@ -8,7 +9,6 @@ import (
 	"os"
 	"strings"
 
-	openapi "github.com/ghkadim/highload_architect/generated/go-server/go"
 	"github.com/ghkadim/highload_architect/internal/service"
 )
 
@@ -48,18 +48,16 @@ func main() {
 		slaves = append(slaves, slave)
 	}
 
-	DefaultApiService := service.NewApiService(
+	apiService := service.NewApiService(
 		master,
 		slaves,
 		session.NewSession(
 			getenv("SESSION_KEY", "secret"),
 		),
 	)
-	DefaultApiController := openapi.NewDefaultApiController(
-		DefaultApiService,
+	apiController := controller.NewApiController(
+		apiService,
 	)
 
-	router := openapi.NewRouter(DefaultApiController)
-
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", apiController))
 }

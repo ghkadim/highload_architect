@@ -38,7 +38,7 @@ func NewStorage(
 }
 
 func (s *Storage) UserRegister(ctx context.Context, user models.User) (string, error) {
-	result, err := s.db.Exec(
+	result, err := s.db.ExecContext(ctx,
 		"INSERT INTO users (first_name, second_name, age, biography, city, password_hash) VALUES (?, ?, ?, ?, ?, ?)",
 		user.FirstName, user.SecondName, user.Age, user.Biography, user.City, user.PasswordHash)
 	if err != nil {
@@ -50,7 +50,7 @@ func (s *Storage) UserRegister(ctx context.Context, user models.User) (string, e
 	}
 
 	var uuid string
-	row := s.db.QueryRow(
+	row := s.db.QueryRowContext(ctx,
 		"SELECT bin_to_uuid(uuid) FROM users WHERE id = ?", id)
 	if err := row.Scan(&uuid); err != nil {
 		return "", fmt.Errorf("userRegister get uuid: %v", err)
@@ -60,7 +60,7 @@ func (s *Storage) UserRegister(ctx context.Context, user models.User) (string, e
 }
 
 func (s *Storage) UserGet(ctx context.Context, id string) (models.User, error) {
-	row := s.db.QueryRow(
+	row := s.db.QueryRowContext(ctx,
 		"SELECT first_name, second_name, age, biography, city, password_hash FROM users WHERE uuid = uuid_to_bin(?)", id)
 	user := models.User{ID: id}
 	if err := row.Scan(&user.FirstName, &user.SecondName, &user.Age, &user.Biography, &user.City, &user.PasswordHash); err != nil {
@@ -74,7 +74,7 @@ func (s *Storage) UserGet(ctx context.Context, id string) (models.User, error) {
 }
 
 func (s *Storage) UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error) {
-	rows, err := s.db.Query(
+	rows, err := s.db.QueryContext(ctx,
 		"SELECT bin_to_uuid(uuid), first_name, second_name, age, biography, city FROM users "+
 			"WHERE first_name LIKE ? AND second_name LIKE ?", firstName+"%", secondName+"%")
 	if err != nil {
@@ -95,4 +95,28 @@ func (s *Storage) UserSearch(ctx context.Context, firstName, secondName string) 
 	}
 
 	return users, nil
+}
+
+func (s *Storage) FriendAdd(ctx context.Context, userID1, userID2 string) error {
+	_, err := s.db.ExecContext(ctx,
+		"INSERT INTO friends (user1_id, user2_id) VALUES ("+
+			"(SELECT id FROM users WHERE uuid = uuid_to_bin(?)),"+
+			"(SELECT id FROM users WHERE uuid = uuid_to_bin(?)))",
+		userID1, userID2)
+	if err != nil {
+		return fmt.Errorf("frienAdd: %v", err)
+	}
+	return nil
+}
+
+func (s *Storage) FriendDelete(ctx context.Context, userID1, userID2 string) error {
+	_, err := s.db.ExecContext(ctx,
+		"DELETE FROM friends WHERE (user1_id, user2_id) = ("+
+			"(SELECT id FROM users WHERE uuid = uuid_to_bin(?)),"+
+			"(SELECT id FROM users WHERE uuid = uuid_to_bin(?)))",
+		userID1, userID2)
+	if err != nil {
+		return fmt.Errorf("frienDelete: %v", err)
+	}
+	return nil
 }

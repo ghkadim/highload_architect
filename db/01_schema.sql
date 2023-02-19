@@ -11,3 +11,24 @@ CREATE TABLE `users`
     KEY `users_first_second_name_IDX` (`first_name`, `second_name`) USING BTREE,
     KEY `users_uuid_IDX` (`uuid`) USING BTREE
 );
+
+CREATE TABLE `friends`
+(
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `user1_id` BIGINT NOT NULL,
+    `user2_id` BIGINT NOT NULL,
+    KEY `friends_user1_id_IDX` (`user1_id`, `user2_id`) USING BTREE,
+    CONSTRAINT `friends_FK_1` FOREIGN KEY (`user1_id`) REFERENCES users(`id`) ON DELETE CASCADE,
+    CONSTRAINT `friends_FK_2` FOREIGN KEY (`user2_id`) REFERENCES users(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `posts`
+(
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `uuid` binary(16) DEFAULT (uuid_to_bin(uuid())) NOT NULL,
+    `text` BLOB NULL,
+    `user_id` BIGINT NOT NULL,
+    KEY `posts_uuid_IDX` (`uuid`) USING BTREE,
+    KEY `posts_user_id_IDX` (`user_id`) USING BTREE,
+    CONSTRAINT `posts_FK` FOREIGN KEY (`user_id`) REFERENCES users(`id`) ON DELETE CASCADE
+);
