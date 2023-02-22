@@ -9,7 +9,7 @@ import (
 
 // UserGetIdGet -
 func (s *ApiService) UserGetIdGet(ctx context.Context, id string) (openapi.ImplResponse, error) {
-	user, err := s.readStorage().UserGet(ctx, id)
+	user, err := s.readStorage().UserGet(ctx, models.UserID(id))
 	if err != nil {
 		if errors.Is(err, models.UserNotFound) {
 			return openapi.Response(404, nil), nil
@@ -19,7 +19,7 @@ func (s *ApiService) UserGetIdGet(ctx context.Context, id string) (openapi.ImplR
 	}
 
 	return openapi.Response(200, openapi.User{
-		Id:         user.ID,
+		Id:         string(user.ID),
 		FirstName:  user.FirstName,
 		SecondName: user.SecondName,
 		Age:        valueOrDefault(user.Age),
@@ -47,7 +47,7 @@ func (s *ApiService) UserRegisterPost(ctx context.Context, user openapi.UserRegi
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}
 
-	return openapi.Response(200, openapi.UserRegisterPost200Response{UserId: id}), nil
+	return openapi.Response(200, openapi.UserRegisterPost200Response{UserId: string(id)}), nil
 }
 
 // UserSearchGet -
@@ -64,7 +64,7 @@ func (s *ApiService) UserSearchGet(ctx context.Context, firstName string, lastNa
 	apiUsers := make([]openapi.User, 0, len(users))
 	for i := range users {
 		apiUsers = append(apiUsers, openapi.User{
-			Id:         users[i].ID,
+			Id:         string(users[i].ID),
 			FirstName:  users[i].FirstName,
 			SecondName: users[i].SecondName,
 			Age:        valueOrDefault(users[i].Age),

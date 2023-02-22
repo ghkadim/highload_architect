@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
+	"github.com/ghkadim/highload_architect/internal/models"
 	"log"
 	"net/http"
 )
@@ -16,7 +17,7 @@ func (s *ApiService) FriendDeleteUserIdPut(ctx context.Context, friendUserID str
 		return openapi.Response(401, nil), nil
 	}
 
-	err = s.master.FriendDelete(ctx, userID, friendUserID)
+	err = s.master.FriendDelete(ctx, userID, models.UserID(friendUserID))
 	if err != nil {
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}
@@ -33,7 +34,7 @@ func (s *ApiService) FriendSetUserIdPut(ctx context.Context, friendUserID string
 		return openapi.Response(401, nil), nil
 	}
 
-	err = s.master.FriendAdd(ctx, userID, friendUserID)
+	err = s.master.FriendAdd(ctx, userID, models.UserID(friendUserID))
 	if err != nil {
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}

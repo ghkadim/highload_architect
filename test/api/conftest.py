@@ -1,8 +1,6 @@
 import pytest
 import openapi_client
-from openapi_client.api import default_api
-from openapi_client.model.user_register_post_request import UserRegisterPostRequest
-from openapi_client.model.login_post_request import LoginPostRequest
+from user import User
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -14,27 +12,14 @@ def configure_app_host():
 
 @pytest.fixture()
 def make_user():
-    def _make_user(first_name="first_name", second_name="second_name", password="password", **kwargs):
-        api = default_api.DefaultApi()
-        return api.user_register_post(
-            user_register_post_request=UserRegisterPostRequest(
-                first_name=first_name,
-                second_name=second_name,
-                password=password,
-                **kwargs,
-            ))
+    def _make_user(**kwargs):
+        return User(**kwargs)
+
     return _make_user
 
 
 @pytest.fixture()
-def login(make_user):
-    api = default_api.DefaultApi()
-    resp = api.login_post(
-        login_post_request=LoginPostRequest(
-            id=make_user().user_id,
-            password="password",
-        ))
-
-    conf = openapi_client.Configuration.get_default_copy()
-    conf.access_token = resp.token
-    openapi_client.Configuration.set_default(conf)
+def default_user(make_user):
+    u = make_user()
+    u.login()
+    return u

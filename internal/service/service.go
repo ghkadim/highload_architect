@@ -7,18 +7,23 @@ import (
 )
 
 type Storage interface {
-	UserRegister(ctx context.Context, user models.User) (string, error)
-	UserGet(ctx context.Context, id string) (models.User, error)
+	UserRegister(ctx context.Context, user models.User) (models.UserID, error)
+	UserGet(ctx context.Context, id models.UserID) (models.User, error)
 	UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error)
-	FriendAdd(ctx context.Context, userID1, userID2 string) error
-	FriendDelete(ctx context.Context, userID1, userID2 string) error
+	FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error
+	FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error
+	PostAdd(ctx context.Context, text string, author models.UserID) (models.PostID, error)
+	PostUpdate(ctx context.Context, postID models.PostID, text string) error
+	PostDelete(ctx context.Context, postID models.PostID) error
+	PostGet(ctx context.Context, postID models.PostID) (models.Post, error)
+	PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error)
 }
 
 type Session interface {
 	HashPassword(ctx context.Context, password string) ([]byte, error)
 	CompareHashAndPassword(ctx context.Context, hash []byte, password string) (bool, error)
-	TokenForUser(ctx context.Context, userID string) (string, error)
-	ParseToken(ctx context.Context, tokenStr string) (string, error)
+	TokenForUser(ctx context.Context, userID models.UserID) (string, error)
+	ParseToken(ctx context.Context, tokenStr string) (models.UserID, error)
 }
 
 type ApiService struct {

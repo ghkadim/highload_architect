@@ -16,7 +16,10 @@ type ApiController struct {
 }
 
 func NewApiController(apiService *service.ApiService) *ApiController {
-	apiController := openapi.NewDefaultApiController(apiService)
+	apiController := openapi.NewDefaultApiController(
+		apiService,
+		openapi.WithDefaultApiErrorHandler(errorHandler),
+	)
 	routes := apiController.Routes()
 
 	return &ApiController{
@@ -77,6 +80,7 @@ type responseWriter struct {
 
 func (w *responseWriter) WriteHeader(statusCode int) {
 	w.code = statusCode
+	w.ResponseWriter.WriteHeader(statusCode)
 }
 
 func logger(inner http.Handler) http.Handler {
@@ -95,4 +99,11 @@ func logger(inner http.Handler) http.Handler {
 			time.Since(start),
 		)
 	})
+}
+
+func errorHandler(w http.ResponseWriter, r *http.Request, err error, result *openapi.ImplResponse) {
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	openapi.DefaultErrorHandler(w, r, err, result)
 }

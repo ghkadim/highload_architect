@@ -9,7 +9,7 @@ import (
 
 // LoginPost -
 func (s *ApiService) LoginPost(ctx context.Context, loginPostRequest openapi.LoginPostRequest) (openapi.ImplResponse, error) {
-	user, err := s.master.UserGet(ctx, loginPostRequest.Id)
+	user, err := s.master.UserGet(ctx, models.UserID(loginPostRequest.Id))
 	if err != nil {
 		if errors.Is(err, models.UserNotFound) {
 			return openapi.Response(404, nil), nil

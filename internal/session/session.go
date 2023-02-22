@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ghkadim/highload_architect/internal/models"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -39,23 +40,23 @@ func (s *Session) CompareHashAndPassword(ctx context.Context, hash []byte, passw
 	return true, nil
 }
 
-func (s *Session) TokenForUser(ctx context.Context, userID string) (string, error) {
+func (s *Session) TokenForUser(ctx context.Context, userID models.UserID) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Subject:   userID,
+		Subject:   string(userID),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 	})
 
 	return token.SignedString(s.key)
 }
 
-func (s *Session) ParseToken(ctx context.Context, tokenStr string) (string, error) {
+func (s *Session) ParseToken(ctx context.Context, tokenStr string) (models.UserID, error) {
 	claims := &jwt.RegisteredClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return s.key, nil
 	})
 	if token.Valid {
-		return claims.Subject, nil
+		return models.UserID(claims.Subject), nil
 	} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
 		return "", ErrTokenExpired
 	} else {

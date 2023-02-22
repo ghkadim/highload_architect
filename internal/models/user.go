@@ -1,7 +1,9 @@
 package models
 
+type UserID string
+
 type User struct {
-	ID           string
+	ID           UserID
 	FirstName    string
 	SecondName   string
 	Age          *int32

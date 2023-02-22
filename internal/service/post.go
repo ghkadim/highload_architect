@@ -4,120 +4,123 @@ import (
 	"context"
 	"errors"
 	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
-	"net/http"
+	"github.com/ghkadim/highload_architect/internal/models"
+	"log"
 )
 
 // PostCreatePost -
 func (s *ApiService) PostCreatePost(ctx context.Context, postCreatePostRequest openapi.PostCreatePostRequest) (openapi.ImplResponse, error) {
-	// TODO - update PostCreatePost with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	token := bearerToken(ctx)
+	userID, err := s.session.ParseToken(ctx, token)
+	if err != nil {
+		log.Printf("Bad token: %v", err)
+		return openapi.Response(401, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, string{}) or use other options such as http.Ok ...
-	//return Response(200, string{}), nil
+	postID, err := s.master.PostAdd(ctx, postCreatePostRequest.Text, userID)
+	if err != nil {
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(500, LoginPost500Response{}), nil
-
-	//TODO: Uncomment the next line to return response Response(503, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(503, LoginPost500Response{}), nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("PostCreatePost method not implemented")
+	return openapi.Response(200, postID), nil
 }
 
 // PostDeleteIdPut -
 func (s *ApiService) PostDeleteIdPut(ctx context.Context, id string) (openapi.ImplResponse, error) {
-	// TODO - update PostDeleteIdPut with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	token := bearerToken(ctx)
+	userID, err := s.session.ParseToken(ctx, token)
+	if err != nil {
+		log.Printf("Bad token: %v", err)
+		return openapi.Response(401, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
+	post, err := s.master.PostGet(ctx, models.PostID(id))
+	if err != nil {
+		if errors.Is(err, models.PostNotFound) {
+			log.Printf("Post already deleted: %v", err)
+			return openapi.Response(200, nil), nil
+		}
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
+	if post.AuthorID != userID {
+		return openapi.Response(403, nil), errors.New("post deletion forbidden for user")
+	}
 
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
+	err = s.master.PostDelete(ctx, models.PostID(id))
+	if err != nil {
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(500, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(500, LoginPost500Response{}), nil
-
-	//TODO: Uncomment the next line to return response Response(503, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(503, LoginPost500Response{}), nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("PostDeleteIdPut method not implemented")
+	return openapi.Response(200, nil), nil
 }
 
 // PostFeedGet -
 func (s *ApiService) PostFeedGet(ctx context.Context, offset int32, limit int32) (openapi.ImplResponse, error) {
-	// TODO - update PostFeedGet with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	token := bearerToken(ctx)
+	userID, err := s.session.ParseToken(ctx, token)
+	if err != nil {
+		log.Printf("Bad token: %v", err)
+		return openapi.Response(401, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, []Post{}) or use other options such as http.Ok ...
-	//return Response(200, []Post{}), nil
+	posts, err := s.readStorage().PostFeed(ctx, userID, int(offset), int(limit))
+	if err != nil {
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
+	postsResp := make([]openapi.Post, 0, len(posts))
+	for _, post := range posts {
+		postsResp = append(postsResp, openapi.Post{
+			Id:           string(post.ID),
+			Text:         post.Text,
+			AuthorUserId: string(post.AuthorID),
+		})
+	}
 
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(500, LoginPost500Response{}), nil
-
-	//TODO: Uncomment the next line to return response Response(503, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(503, LoginPost500Response{}), nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("PostFeedGet method not implemented")
+	return openapi.Response(200, postsResp), nil
 }
 
 // PostGetIdGet -
 func (s *ApiService) PostGetIdGet(ctx context.Context, id string) (openapi.ImplResponse, error) {
-	// TODO - update PostGetIdGet with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	post, err := s.master.PostGet(ctx, models.PostID(id))
+	if err != nil {
+		if errors.Is(err, models.PostNotFound) {
+			log.Printf("Post already deleted: %v", err)
+			return openapi.Response(404, nil), nil
+		}
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, Post{}) or use other options such as http.Ok ...
-	//return Response(200, Post{}), nil
-
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(500, LoginPost500Response{}), nil
-
-	//TODO: Uncomment the next line to return response Response(503, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(503, LoginPost500Response{}), nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("PostGetIdGet method not implemented")
+	return openapi.Response(200, openapi.Post{Id: string(post.ID), Text: post.Text, AuthorUserId: string(post.AuthorID)}), nil
 }
 
 // PostUpdatePut -
 func (s *ApiService) PostUpdatePut(ctx context.Context, postUpdatePutRequest openapi.PostUpdatePutRequest) (openapi.ImplResponse, error) {
-	// TODO - update PostUpdatePut with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	token := bearerToken(ctx)
+	userID, err := s.session.ParseToken(ctx, token)
+	if err != nil {
+		log.Printf("Bad token: %v", err)
+		return openapi.Response(401, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
+	post, err := s.master.PostGet(ctx, models.PostID(postUpdatePutRequest.Id))
+	if err != nil {
+		if errors.Is(err, models.PostNotFound) {
+			log.Printf("Post already deleted: %v", err)
+			return openapi.Response(200, nil), nil
+		}
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
+	if post.AuthorID != userID {
+		return openapi.Response(403, nil), errors.New("post deletion forbidden for user")
+	}
 
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
+	err = s.master.PostUpdate(ctx, models.PostID(postUpdatePutRequest.Id), postUpdatePutRequest.Text)
+	if err != nil {
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(500, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(500, LoginPost500Response{}), nil
-
-	//TODO: Uncomment the next line to return response Response(503, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(503, LoginPost500Response{}), nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("PostUpdatePut method not implemented")
+	return openapi.Response(200, nil), nil
 }
