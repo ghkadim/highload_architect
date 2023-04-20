@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/ghkadim/highload_architect/internal/models"
 	"sync/atomic"
+
+	"github.com/ghkadim/highload_architect/internal/models"
 )
 
 type Storage interface {
@@ -12,11 +13,20 @@ type Storage interface {
 	UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error)
 	FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error
 	FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error
-	PostAdd(ctx context.Context, text string, author models.UserID) (models.PostID, error)
+	PostAdd(ctx context.Context, text string, author models.UserID) (models.Post, error)
 	PostUpdate(ctx context.Context, postID models.PostID, text string) error
 	PostDelete(ctx context.Context, postID models.PostID) error
 	PostGet(ctx context.Context, postID models.PostID) (models.Post, error)
 	PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error)
+}
+
+type Cache interface {
+	FriendAdd(userID1, userID2 models.UserID)
+	FriendDelete(userID1, userID2 models.UserID)
+	PostAdd(post models.Post)
+	PostUpdate(postID models.PostID, text string)
+	PostDelete(postID models.PostID)
+	PostFeed(userID models.UserID, offset, limit int) ([]models.Post, error)
 }
 
 type Session interface {
@@ -31,17 +41,20 @@ type ApiService struct {
 	replicas   []Storage
 	replicaNum atomic.Int32
 	session    Session
+	cache      Cache
 }
 
 // NewApiService creates an api service
 func NewApiService(
 	master Storage,
 	replicas []Storage,
+	cache Cache,
 	session Session,
 ) *ApiService {
 	return &ApiService{
 		master:   master,
 		replicas: replicas,
+		cache:    cache,
 		session:  session,
 	}
 }

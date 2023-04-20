@@ -21,7 +21,7 @@ type PostUpdatePutRequest struct {
 // AssertPostUpdatePutRequestRequired checks if the required fields are not zero-ed
 func AssertPostUpdatePutRequestRequired(obj PostUpdatePutRequest) error {
 	elements := map[string]interface{}{
-		"id":   obj.Id,
+		"id": obj.Id,
 		"text": obj.Text,
 	}
 	for name, el := range elements {

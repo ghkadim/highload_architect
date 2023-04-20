@@ -11,8 +11,8 @@ package openapi
 
 import (
 	"context"
-	"errors"
 	"net/http"
+	"errors"
 )
 
 // DefaultApiService is a service that implements the logic for the DefaultApiServicer
@@ -26,7 +26,7 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
-// DialogUserIdListGet -
+// DialogUserIdListGet - 
 func (s *DefaultApiService) DialogUserIdListGet(ctx context.Context, userId string) (ImplResponse, error) {
 	// TODO - update DialogUserIdListGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -49,7 +49,7 @@ func (s *DefaultApiService) DialogUserIdListGet(ctx context.Context, userId stri
 	return Response(http.StatusNotImplemented, nil), errors.New("DialogUserIdListGet method not implemented")
 }
 
-// DialogUserIdSendPost -
+// DialogUserIdSendPost - 
 func (s *DefaultApiService) DialogUserIdSendPost(ctx context.Context, userId string, dialogUserIdSendPostRequest DialogUserIdSendPostRequest) (ImplResponse, error) {
 	// TODO - update DialogUserIdSendPost with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -72,7 +72,7 @@ func (s *DefaultApiService) DialogUserIdSendPost(ctx context.Context, userId str
 	return Response(http.StatusNotImplemented, nil), errors.New("DialogUserIdSendPost method not implemented")
 }
 
-// FriendDeleteUserIdPut -
+// FriendDeleteUserIdPut - 
 func (s *DefaultApiService) FriendDeleteUserIdPut(ctx context.Context, userId string) (ImplResponse, error) {
 	// TODO - update FriendDeleteUserIdPut with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -95,7 +95,7 @@ func (s *DefaultApiService) FriendDeleteUserIdPut(ctx context.Context, userId st
 	return Response(http.StatusNotImplemented, nil), errors.New("FriendDeleteUserIdPut method not implemented")
 }
 
-// FriendSetUserIdPut -
+// FriendSetUserIdPut - 
 func (s *DefaultApiService) FriendSetUserIdPut(ctx context.Context, userId string) (ImplResponse, error) {
 	// TODO - update FriendSetUserIdPut with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -118,7 +118,7 @@ func (s *DefaultApiService) FriendSetUserIdPut(ctx context.Context, userId strin
 	return Response(http.StatusNotImplemented, nil), errors.New("FriendSetUserIdPut method not implemented")
 }
 
-// LoginPost -
+// LoginPost - 
 func (s *DefaultApiService) LoginPost(ctx context.Context, loginPostRequest LoginPostRequest) (ImplResponse, error) {
 	// TODO - update LoginPost with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -141,7 +141,7 @@ func (s *DefaultApiService) LoginPost(ctx context.Context, loginPostRequest Logi
 	return Response(http.StatusNotImplemented, nil), errors.New("LoginPost method not implemented")
 }
 
-// PostCreatePost -
+// PostCreatePost - 
 func (s *DefaultApiService) PostCreatePost(ctx context.Context, postCreatePostRequest PostCreatePostRequest) (ImplResponse, error) {
 	// TODO - update PostCreatePost with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -164,7 +164,7 @@ func (s *DefaultApiService) PostCreatePost(ctx context.Context, postCreatePostRe
 	return Response(http.StatusNotImplemented, nil), errors.New("PostCreatePost method not implemented")
 }
 
-// PostDeleteIdPut -
+// PostDeleteIdPut - 
 func (s *DefaultApiService) PostDeleteIdPut(ctx context.Context, id string) (ImplResponse, error) {
 	// TODO - update PostDeleteIdPut with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -187,7 +187,7 @@ func (s *DefaultApiService) PostDeleteIdPut(ctx context.Context, id string) (Imp
 	return Response(http.StatusNotImplemented, nil), errors.New("PostDeleteIdPut method not implemented")
 }
 
-// PostFeedGet -
+// PostFeedGet - 
 func (s *DefaultApiService) PostFeedGet(ctx context.Context, offset int32, limit int32) (ImplResponse, error) {
 	// TODO - update PostFeedGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -210,7 +210,7 @@ func (s *DefaultApiService) PostFeedGet(ctx context.Context, offset int32, limit
 	return Response(http.StatusNotImplemented, nil), errors.New("PostFeedGet method not implemented")
 }
 
-// PostGetIdGet -
+// PostGetIdGet - 
 func (s *DefaultApiService) PostGetIdGet(ctx context.Context, id string) (ImplResponse, error) {
 	// TODO - update PostGetIdGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -233,7 +233,7 @@ func (s *DefaultApiService) PostGetIdGet(ctx context.Context, id string) (ImplRe
 	return Response(http.StatusNotImplemented, nil), errors.New("PostGetIdGet method not implemented")
 }
 
-// PostUpdatePut -
+// PostUpdatePut - 
 func (s *DefaultApiService) PostUpdatePut(ctx context.Context, postUpdatePutRequest PostUpdatePutRequest) (ImplResponse, error) {
 	// TODO - update PostUpdatePut with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -256,7 +256,7 @@ func (s *DefaultApiService) PostUpdatePut(ctx context.Context, postUpdatePutRequ
 	return Response(http.StatusNotImplemented, nil), errors.New("PostUpdatePut method not implemented")
 }
 
-// UserGetIdGet -
+// UserGetIdGet - 
 func (s *DefaultApiService) UserGetIdGet(ctx context.Context, id string) (ImplResponse, error) {
 	// TODO - update UserGetIdGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -279,7 +279,7 @@ func (s *DefaultApiService) UserGetIdGet(ctx context.Context, id string) (ImplRe
 	return Response(http.StatusNotImplemented, nil), errors.New("UserGetIdGet method not implemented")
 }
 
-// UserRegisterPost -
+// UserRegisterPost - 
 func (s *DefaultApiService) UserRegisterPost(ctx context.Context, userRegisterPostRequest UserRegisterPostRequest) (ImplResponse, error) {
 	// TODO - update UserRegisterPost with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -299,7 +299,7 @@ func (s *DefaultApiService) UserRegisterPost(ctx context.Context, userRegisterPo
 	return Response(http.StatusNotImplemented, nil), errors.New("UserRegisterPost method not implemented")
 }
 
-// UserSearchGet -
+// UserSearchGet - 
 func (s *DefaultApiService) UserSearchGet(ctx context.Context, firstName string, lastName string) (ImplResponse, error) {
 	// TODO - update UserSearchGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.

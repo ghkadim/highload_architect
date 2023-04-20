@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 	"errors"
+
 	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
+	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/models"
-	"log"
 )
 
 // PostCreatePost -
@@ -13,16 +14,17 @@ func (s *ApiService) PostCreatePost(ctx context.Context, postCreatePostRequest o
 	token := bearerToken(ctx)
 	userID, err := s.session.ParseToken(ctx, token)
 	if err != nil {
-		log.Printf("Bad token: %v", err)
+		logger.Error("Bad token: %v", err)
 		return openapi.Response(401, nil), nil
 	}
 
-	postID, err := s.master.PostAdd(ctx, postCreatePostRequest.Text, userID)
+	post, err := s.master.PostAdd(ctx, postCreatePostRequest.Text, userID)
 	if err != nil {
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}
 
-	return openapi.Response(200, postID), nil
+	s.cache.PostAdd(post)
+	return openapi.Response(200, post.ID), nil
 }
 
 // PostDeleteIdPut -
@@ -30,14 +32,14 @@ func (s *ApiService) PostDeleteIdPut(ctx context.Context, id string) (openapi.Im
 	token := bearerToken(ctx)
 	userID, err := s.session.ParseToken(ctx, token)
 	if err != nil {
-		log.Printf("Bad token: %v", err)
+		logger.Error("Bad token: %v", err)
 		return openapi.Response(401, nil), nil
 	}
 
 	post, err := s.master.PostGet(ctx, models.PostID(id))
 	if err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			log.Printf("Post already deleted: %v", err)
+		if errors.Is(err, models.ErrPostNotFound) {
+			logger.Error("Post already deleted: %v", err)
 			return openapi.Response(200, nil), nil
 		}
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
@@ -52,6 +54,7 @@ func (s *ApiService) PostDeleteIdPut(ctx context.Context, id string) (openapi.Im
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}
 
+	s.cache.PostDelete(models.PostID(id))
 	return openapi.Response(200, nil), nil
 }
 
@@ -60,13 +63,29 @@ func (s *ApiService) PostFeedGet(ctx context.Context, offset int32, limit int32)
 	token := bearerToken(ctx)
 	userID, err := s.session.ParseToken(ctx, token)
 	if err != nil {
-		log.Printf("Bad token: %v", err)
+		logger.Error("Bad token: %v", err)
 		return openapi.Response(401, nil), nil
 	}
 
-	posts, err := s.readStorage().PostFeed(ctx, userID, int(offset), int(limit))
+	cached := true
+	posts, err := s.cache.PostFeed(userID, int(offset), int(limit))
 	if err != nil {
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
+		if !(errors.Is(err, models.ErrFeedNotFound) || errors.Is(err, models.ErrFeedPartial)) {
+			return openapi.Response(500, openapi.LoginPost500Response{}), err
+		}
+		cached = false
+	}
+
+	if !cached {
+		dbOffset := int(offset) + len(posts)
+		dbLimit := int(limit) - len(posts)
+
+		dbPosts, err := s.master.PostFeed(ctx, userID, dbOffset, dbLimit)
+		if err != nil {
+			return openapi.Response(500, openapi.LoginPost500Response{}), err
+		}
+
+		posts = append(posts, dbPosts...)
 	}
 
 	postsResp := make([]openapi.Post, 0, len(posts))
@@ -85,8 +104,8 @@ func (s *ApiService) PostFeedGet(ctx context.Context, offset int32, limit int32)
 func (s *ApiService) PostGetIdGet(ctx context.Context, id string) (openapi.ImplResponse, error) {
 	post, err := s.master.PostGet(ctx, models.PostID(id))
 	if err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			log.Printf("Post already deleted: %v", err)
+		if errors.Is(err, models.ErrPostNotFound) {
+			logger.Error("Post already deleted: %v", err)
 			return openapi.Response(404, nil), nil
 		}
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
@@ -100,14 +119,14 @@ func (s *ApiService) PostUpdatePut(ctx context.Context, postUpdatePutRequest ope
 	token := bearerToken(ctx)
 	userID, err := s.session.ParseToken(ctx, token)
 	if err != nil {
-		log.Printf("Bad token: %v", err)
+		logger.Error("Bad token: %v", err)
 		return openapi.Response(401, nil), nil
 	}
 
 	post, err := s.master.PostGet(ctx, models.PostID(postUpdatePutRequest.Id))
 	if err != nil {
-		if errors.Is(err, models.PostNotFound) {
-			log.Printf("Post already deleted: %v", err)
+		if errors.Is(err, models.ErrPostNotFound) {
+			logger.Error("Post already deleted: %v", err)
 			return openapi.Response(200, nil), nil
 		}
 		return openapi.Response(500, openapi.LoginPost500Response{}), err

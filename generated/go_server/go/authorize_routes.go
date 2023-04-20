@@ -6,13 +6,13 @@ var AuthorizeRoutes = []struct {
 }{
 
 	{
-		Path:   "/post/create",
-		Method: "POST",
+		Path:   "/post/update",
+		Method: "PUT",
 	},
 
 	{
-		Path:   "/post/delete/{id}",
-		Method: "PUT",
+		Path:   "/post/feed",
+		Method: "GET",
 	},
 
 	{
@@ -31,17 +31,17 @@ var AuthorizeRoutes = []struct {
 	},
 
 	{
-		Path:   "/post/feed",
-		Method: "GET",
-	},
-
-	{
 		Path:   "/dialog/{user_id}/send",
 		Method: "POST",
 	},
 
 	{
-		Path:   "/post/update",
+		Path:   "/post/delete/{id}",
 		Method: "PUT",
+	},
+
+	{
+		Path:   "/post/create",
+		Method: "POST",
 	},
 }

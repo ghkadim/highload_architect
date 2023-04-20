@@ -25,7 +25,7 @@ type DialogMessage struct {
 func AssertDialogMessageRequired(obj DialogMessage) error {
 	elements := map[string]interface{}{
 		"from": obj.From,
-		"to":   obj.To,
+		"to": obj.To,
 		"text": obj.Text,
 	}
 	for name, el := range elements {

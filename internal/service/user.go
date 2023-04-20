@@ -11,7 +11,7 @@ import (
 func (s *ApiService) UserGetIdGet(ctx context.Context, id string) (openapi.ImplResponse, error) {
 	user, err := s.readStorage().UserGet(ctx, models.UserID(id))
 	if err != nil {
-		if errors.Is(err, models.UserNotFound) {
+		if errors.Is(err, models.ErrUserNotFound) {
 			return openapi.Response(404, nil), nil
 		}
 

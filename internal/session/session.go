@@ -55,7 +55,7 @@ func (s *Session) ParseToken(ctx context.Context, tokenStr string) (models.UserI
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return s.key, nil
 	})
-	if token.Valid {
+	if token != nil && token.Valid {
 		return models.UserID(claims.Subject), nil
 	} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
 		return "", ErrTokenExpired

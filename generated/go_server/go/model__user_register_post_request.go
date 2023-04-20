@@ -10,6 +10,7 @@
 package openapi
 
 type UserRegisterPostRequest struct {
+
 	FirstName string `json:"first_name,omitempty"`
 
 	SecondName string `json:"second_name,omitempty"`

@@ -10,6 +10,7 @@
 package openapi
 
 type LoginPost200Response struct {
+
 	Token string `json:"token,omitempty"`
 }
 

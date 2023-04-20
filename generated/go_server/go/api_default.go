@@ -19,7 +19,7 @@ import (
 
 // DefaultApiController binds http requests to an api service and writes the service results to the http response
 type DefaultApiController struct {
-	service      DefaultApiServicer
+	service DefaultApiServicer
 	errorHandler ErrorHandler
 }
 
@@ -49,7 +49,7 @@ func NewDefaultApiController(s DefaultApiServicer, opts ...DefaultApiOption) Rou
 
 // Routes returns all the api routes for the DefaultApiController
 func (c *DefaultApiController) Routes() Routes {
-	return Routes{
+	return Routes{ 
 		{
 			"DialogUserIdListGet",
 			strings.ToUpper("Get"),
@@ -131,11 +131,11 @@ func (c *DefaultApiController) Routes() Routes {
 	}
 }
 
-// DialogUserIdListGet -
+// DialogUserIdListGet - 
 func (c *DefaultApiController) DialogUserIdListGet(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userIdParam := params["user_id"]
-
+	
 	result, err := c.service.DialogUserIdListGet(r.Context(), userIdParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -147,11 +147,11 @@ func (c *DefaultApiController) DialogUserIdListGet(w http.ResponseWriter, r *htt
 
 }
 
-// DialogUserIdSendPost -
+// DialogUserIdSendPost - 
 func (c *DefaultApiController) DialogUserIdSendPost(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userIdParam := params["user_id"]
-
+	
 	dialogUserIdSendPostRequestParam := DialogUserIdSendPostRequest{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
@@ -174,11 +174,11 @@ func (c *DefaultApiController) DialogUserIdSendPost(w http.ResponseWriter, r *ht
 
 }
 
-// FriendDeleteUserIdPut -
+// FriendDeleteUserIdPut - 
 func (c *DefaultApiController) FriendDeleteUserIdPut(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userIdParam := params["user_id"]
-
+	
 	result, err := c.service.FriendDeleteUserIdPut(r.Context(), userIdParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -190,11 +190,11 @@ func (c *DefaultApiController) FriendDeleteUserIdPut(w http.ResponseWriter, r *h
 
 }
 
-// FriendSetUserIdPut -
+// FriendSetUserIdPut - 
 func (c *DefaultApiController) FriendSetUserIdPut(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userIdParam := params["user_id"]
-
+	
 	result, err := c.service.FriendSetUserIdPut(r.Context(), userIdParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -206,7 +206,7 @@ func (c *DefaultApiController) FriendSetUserIdPut(w http.ResponseWriter, r *http
 
 }
 
-// LoginPost -
+// LoginPost - 
 func (c *DefaultApiController) LoginPost(w http.ResponseWriter, r *http.Request) {
 	loginPostRequestParam := LoginPostRequest{}
 	d := json.NewDecoder(r.Body)
@@ -230,7 +230,7 @@ func (c *DefaultApiController) LoginPost(w http.ResponseWriter, r *http.Request)
 
 }
 
-// PostCreatePost -
+// PostCreatePost - 
 func (c *DefaultApiController) PostCreatePost(w http.ResponseWriter, r *http.Request) {
 	postCreatePostRequestParam := PostCreatePostRequest{}
 	d := json.NewDecoder(r.Body)
@@ -254,11 +254,11 @@ func (c *DefaultApiController) PostCreatePost(w http.ResponseWriter, r *http.Req
 
 }
 
-// PostDeleteIdPut -
+// PostDeleteIdPut - 
 func (c *DefaultApiController) PostDeleteIdPut(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	idParam := params["id"]
-
+	
 	result, err := c.service.PostDeleteIdPut(r.Context(), idParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -270,7 +270,7 @@ func (c *DefaultApiController) PostDeleteIdPut(w http.ResponseWriter, r *http.Re
 
 }
 
-// PostFeedGet -
+// PostFeedGet - 
 func (c *DefaultApiController) PostFeedGet(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	offsetParam, err := parseInt32Parameter(query.Get("offset"), false)
@@ -294,11 +294,11 @@ func (c *DefaultApiController) PostFeedGet(w http.ResponseWriter, r *http.Reques
 
 }
 
-// PostGetIdGet -
+// PostGetIdGet - 
 func (c *DefaultApiController) PostGetIdGet(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	idParam := params["id"]
-
+	
 	result, err := c.service.PostGetIdGet(r.Context(), idParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -310,7 +310,7 @@ func (c *DefaultApiController) PostGetIdGet(w http.ResponseWriter, r *http.Reque
 
 }
 
-// PostUpdatePut -
+// PostUpdatePut - 
 func (c *DefaultApiController) PostUpdatePut(w http.ResponseWriter, r *http.Request) {
 	postUpdatePutRequestParam := PostUpdatePutRequest{}
 	d := json.NewDecoder(r.Body)
@@ -334,11 +334,11 @@ func (c *DefaultApiController) PostUpdatePut(w http.ResponseWriter, r *http.Requ
 
 }
 
-// UserGetIdGet -
+// UserGetIdGet - 
 func (c *DefaultApiController) UserGetIdGet(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	idParam := params["id"]
-
+	
 	result, err := c.service.UserGetIdGet(r.Context(), idParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -350,7 +350,7 @@ func (c *DefaultApiController) UserGetIdGet(w http.ResponseWriter, r *http.Reque
 
 }
 
-// UserRegisterPost -
+// UserRegisterPost - 
 func (c *DefaultApiController) UserRegisterPost(w http.ResponseWriter, r *http.Request) {
 	userRegisterPostRequestParam := UserRegisterPostRequest{}
 	d := json.NewDecoder(r.Body)
@@ -374,7 +374,7 @@ func (c *DefaultApiController) UserRegisterPost(w http.ResponseWriter, r *http.R
 
 }
 
-// UserSearchGet -
+// UserSearchGet - 
 func (c *DefaultApiController) UserSearchGet(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	firstNameParam := query.Get("first_name")

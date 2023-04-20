@@ -1,0 +1,15 @@
+services:
+  test:
+    image: python:3.9
+    working_dir: /src
+    environment:
+      APP_HOST: "http://app:8080"
+    command: bash -c "
+        pip install -r /src/requirements.txt;
+        make test_api
+      "
+    volumes:
+      - ${PWD}:/src
+    depends_on:
+      - app
+      - db

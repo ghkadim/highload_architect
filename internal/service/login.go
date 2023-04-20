@@ -11,7 +11,7 @@ import (
 func (s *ApiService) LoginPost(ctx context.Context, loginPostRequest openapi.LoginPostRequest) (openapi.ImplResponse, error) {
 	user, err := s.master.UserGet(ctx, models.UserID(loginPostRequest.Id))
 	if err != nil {
-		if errors.Is(err, models.UserNotFound) {
+		if errors.Is(err, models.ErrUserNotFound) {
 			return openapi.Response(404, nil), nil
 		}
 		return openapi.Response(500, openapi.LoginPost500Response{}), err

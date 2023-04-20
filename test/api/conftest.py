@@ -1,4 +1,5 @@
 import pytest
+import os
 import openapi_client
 from user import User
 
@@ -6,7 +7,7 @@ from user import User
 @pytest.fixture(autouse=True, scope="session")
 def configure_app_host():
     conf = openapi_client.Configuration.get_default_copy()
-    conf.host = "http://localhost:8080"
+    conf.host = os.environ.get("APP_HOST", "http://localhost:8080")
     openapi_client.Configuration.set_default(conf)
 
 

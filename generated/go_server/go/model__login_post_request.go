@@ -10,6 +10,7 @@
 package openapi
 
 type LoginPostRequest struct {
+
 	Id string `json:"id,omitempty"`
 
 	Password string `json:"password,omitempty"`

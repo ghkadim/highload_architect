@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/ghkadim/highload_architect/internal/models"
+
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/ghkadim/highload_architect/internal/models"
 )
 
 type Storage struct {
@@ -65,7 +67,7 @@ func (s *Storage) UserGet(ctx context.Context, id models.UserID) (models.User, e
 	user := models.User{ID: id}
 	if err := row.Scan(&user.FirstName, &user.SecondName, &user.Age, &user.Biography, &user.City, &user.PasswordHash); err != nil {
 		if err == sql.ErrNoRows {
-			return models.User{}, models.UserNotFound
+			return models.User{}, models.ErrUserNotFound
 		}
 		return models.User{}, fmt.Errorf("userGet %q: %v", id, err)
 	}
@@ -121,26 +123,27 @@ func (s *Storage) FriendDelete(ctx context.Context, userID1, userID2 models.User
 	return nil
 }
 
-func (s *Storage) PostAdd(ctx context.Context, text string, author models.UserID) (models.PostID, error) {
+func (s *Storage) PostAdd(ctx context.Context, text string, author models.UserID) (models.Post, error) {
 	result, err := s.db.ExecContext(ctx,
 		"INSERT INTO posts (text, user_id) VALUES "+
 			"(?, (SELECT id FROM users WHERE uuid = uuid_to_bin(?)))", text, author)
 	if err != nil {
-		return "", fmt.Errorf("postAdd: %v", err)
+		return models.Post{}, fmt.Errorf("postAdd: %v", err)
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return "", fmt.Errorf("postAdd: %v", err)
+		return models.Post{}, fmt.Errorf("postAdd: %v", err)
 	}
 
 	var uuid models.PostID
+	var seqID int64
 	row := s.db.QueryRowContext(ctx,
-		"SELECT bin_to_uuid(uuid) FROM posts WHERE id = ?", id)
-	if err := row.Scan(&uuid); err != nil {
-		return "", fmt.Errorf("postAdd get uuid: %v", err)
+		"SELECT bin_to_uuid(uuid), id FROM posts WHERE id = ?", id)
+	if err := row.Scan(&uuid, &seqID); err != nil {
+		return models.Post{}, fmt.Errorf("postAdd get uuid: %v", err)
 	}
 
-	return uuid, nil
+	return models.Post{ID: uuid, SequentialID: seqID, Text: text, AuthorID: author}, nil
 }
 
 func (s *Storage) PostUpdate(ctx context.Context, postID models.PostID, text string) error {
@@ -168,7 +171,7 @@ func (s *Storage) PostGet(ctx context.Context, postID models.PostID) (models.Pos
 	post := models.Post{ID: postID}
 	if err := row.Scan(&post.SequentialID, &post.Text, &post.AuthorID); err != nil {
 		if err == sql.ErrNoRows {
-			return models.Post{}, models.PostNotFound
+			return models.Post{}, models.ErrPostNotFound
 		}
 		return models.Post{}, fmt.Errorf("postGet %q: %v", postID, err)
 	}
@@ -202,4 +205,57 @@ func (s *Storage) PostFeed(ctx context.Context, userID models.UserID, offset, li
 	}
 
 	return posts, nil
+}
+
+func (s *Storage) UserPosts(ctx context.Context, user models.UserID, limit int) ([]models.Post, error) {
+	rows, err := s.db.QueryContext(ctx,
+		"SELECT posts.id, bin_to_uuid(posts.uuid), text FROM posts "+
+			"JOIN users u ON u.id = posts.user_id WHERE u.uuid = uuid_to_bin(?) "+
+			"ORDER BY id DESC LIMIT ?", user, limit)
+	if err != nil {
+		return nil, fmt.Errorf("userPosts: %v", err)
+	}
+	defer rows.Close()
+
+	posts := make([]models.Post, 0)
+	for rows.Next() {
+		post := models.Post{AuthorID: user}
+		if err := rows.Scan(&post.SequentialID, &post.ID, &post.Text); err != nil {
+			return nil, fmt.Errorf("userPosts user %s: %v", user, err)
+		}
+		posts = append(posts, post)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("userPosts user %s: %v", user, err)
+	}
+
+	return posts, nil
+}
+
+func (s *Storage) UserFriends(ctx context.Context, user models.UserID) ([]models.UserID, error) {
+	rows, err := s.db.QueryContext(ctx,
+		"SELECT bin_to_uuid(u.uuid) FROM friends "+
+			"JOIN users u ON u.id = user2_id "+
+			"WHERE user2_id IN ( "+
+			" 	SELECT user2_id FROM friends "+
+			" 	JOIN users u ON u.id = friends.user1_id "+
+			" 	WHERE u.uuid = uuid_to_bin(?))", user)
+	if err != nil {
+		return nil, fmt.Errorf("userFriends: %v", err)
+	}
+	defer rows.Close()
+
+	users := make([]models.UserID, 0)
+	for rows.Next() {
+		var id models.UserID
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("userFriends user %s: %v", user, err)
+		}
+		users = append(users, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("userFriends user %s: %v", user, err)
+	}
+
+	return users, nil
 }

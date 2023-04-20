@@ -2,13 +2,15 @@ package controller
 
 import (
 	"context"
-	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
-	"github.com/ghkadim/highload_architect/internal/service"
-	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
+
+	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
+	log "github.com/ghkadim/highload_architect/internal/logger"
+	"github.com/ghkadim/highload_architect/internal/service"
 )
 
 type ApiController struct {
@@ -91,7 +93,7 @@ func logger(inner http.Handler) http.Handler {
 
 		inner.ServeHTTP(writer, r)
 
-		log.Printf(
+		log.Debug(
 			"%s %s %d %s",
 			r.Method,
 			r.RequestURI,
@@ -103,7 +105,7 @@ func logger(inner http.Handler) http.Handler {
 
 func errorHandler(w http.ResponseWriter, r *http.Request, err error, result *openapi.ImplResponse) {
 	if err != nil {
-		log.Printf("%v", err)
+		log.Error("%v", err)
 	}
 	openapi.DefaultErrorHandler(w, r, err, result)
 }
