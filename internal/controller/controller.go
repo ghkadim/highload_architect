@@ -10,6 +10,7 @@ import (
 
 	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
 	log "github.com/ghkadim/highload_architect/internal/logger"
+	"github.com/ghkadim/highload_architect/internal/models"
 	"github.com/ghkadim/highload_architect/internal/service"
 )
 
@@ -49,12 +50,15 @@ func authorize(inner http.Handler, pattern, method string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		auth := strings.Trim(r.Header.Get("Authorization"), " ")
 		if len(auth) == 0 || !strings.HasPrefix(auth, "Bearer ") {
-			openapi.EncodeJSONResponse(nil, func(i int) *int { return &i }(http.StatusUnauthorized), w)
+			err := openapi.EncodeJSONResponse(nil, func(i int) *int { return &i }(http.StatusUnauthorized), w)
+			if err != nil {
+				log.Error("Failed to encode Json response: %v", err)
+			}
 			return
 		}
 
 		token := strings.TrimPrefix(auth, "Bearer ")
-		r = r.WithContext(context.WithValue(r.Context(), "BearerToken", token))
+		r = r.WithContext(context.WithValue(r.Context(), models.BearerTokenCtxKey, token))
 		inner.ServeHTTP(w, r)
 	})
 }

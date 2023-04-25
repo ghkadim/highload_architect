@@ -19,7 +19,6 @@ type DataSource interface {
 type loadWithRetry struct {
 	dataSource DataSource
 	tasks      chan struct{}
-	feedLimit  int
 }
 
 func NewLoadWithRetry(dataSource DataSource) *loadWithRetry {

@@ -67,7 +67,7 @@ func valueOrDefault[V any](value *V) V {
 }
 
 func bearerToken(ctx context.Context) string {
-	val := ctx.Value("BearerToken")
+	val := ctx.Value(models.BearerTokenCtxKey)
 	if val == nil {
 		return ""
 	}

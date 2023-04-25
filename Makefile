@@ -16,6 +16,14 @@ build_and_run: build run
 test:
 	go test ./...
 
+.PHONY: linter-install
+linter-install:
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.52.2
+
+.PHONY: lint
+lint:
+	golangci-lint run --timeout 5m --verbose
+
 .PHONY: test_api
 test_api:
 	pytest -x -v test/api

@@ -34,7 +34,7 @@ func getenv[T any](variable string, defaultValue T) T {
 
 func main() {
 	l := logger.Init(getenv("DEBUG", false))
-	defer l.Sync()
+	defer func() { _ = l.Sync() }()
 
 	logger.Info("Server starting")
 

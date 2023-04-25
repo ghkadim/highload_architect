@@ -1,3 +1,5 @@
+import time
+
 import pytest
 import os
 import openapi_client
@@ -9,6 +11,11 @@ def configure_app_host():
     conf = openapi_client.Configuration.get_default_copy()
     conf.host = os.environ.get("APP_HOST", "http://localhost:8080")
     openapi_client.Configuration.set_default(conf)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def timeout_before_start():
+    time.sleep(10)
 
 
 @pytest.fixture()
