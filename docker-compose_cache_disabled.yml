@@ -1,0 +1,4 @@
+services:
+  app:
+    environment:
+      CACHE_ENABLED: 'false'

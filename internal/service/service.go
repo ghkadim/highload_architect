@@ -2,22 +2,38 @@ package service
 
 import (
 	"context"
-	"errors"
-	openapi "github.com/ghkadim/highload_architect/generated/go"
-	"github.com/ghkadim/highload_architect/internal/models"
 	"sync/atomic"
+
+	"github.com/ghkadim/highload_architect/internal/models"
 )
 
 type Storage interface {
-	UserRegister(ctx context.Context, user models.User) (string, error)
-	UserGet(ctx context.Context, id string) (models.User, error)
+	UserRegister(ctx context.Context, user models.User) (models.UserID, error)
+	UserGet(ctx context.Context, id models.UserID) (models.User, error)
 	UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error)
+	FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error
+	FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error
+	PostAdd(ctx context.Context, text string, author models.UserID) (models.Post, error)
+	PostUpdate(ctx context.Context, postID models.PostID, text string) error
+	PostDelete(ctx context.Context, postID models.PostID) error
+	PostGet(ctx context.Context, postID models.PostID) (models.Post, error)
+	PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error)
+}
+
+type Cache interface {
+	FriendAdd(userID1, userID2 models.UserID)
+	FriendDelete(userID1, userID2 models.UserID)
+	PostAdd(post models.Post)
+	PostUpdate(postID models.PostID, text string)
+	PostDelete(postID models.PostID)
+	PostFeed(userID models.UserID, offset, limit int) ([]models.Post, error)
 }
 
 type Session interface {
 	HashPassword(ctx context.Context, password string) ([]byte, error)
 	CompareHashAndPassword(ctx context.Context, hash []byte, password string) (bool, error)
-	TokenForUser(ctx context.Context, user models.User) (string, error)
+	TokenForUser(ctx context.Context, userID models.UserID) (string, error)
+	ParseToken(ctx context.Context, tokenStr string) (models.UserID, error)
 }
 
 type ApiService struct {
@@ -25,17 +41,20 @@ type ApiService struct {
 	replicas   []Storage
 	replicaNum atomic.Int32
 	session    Session
+	cache      Cache
 }
 
 // NewApiService creates an api service
 func NewApiService(
 	master Storage,
 	replicas []Storage,
+	cache Cache,
 	session Session,
 ) *ApiService {
 	return &ApiService{
 		master:   master,
 		replicas: replicas,
+		cache:    cache,
 		session:  session,
 	}
 }
@@ -47,105 +66,17 @@ func valueOrDefault[V any](value *V) V {
 	return *value
 }
 
+func bearerToken(ctx context.Context) string {
+	val := ctx.Value("BearerToken")
+	if val == nil {
+		return ""
+	}
+	return val.(string)
+}
+
 func (s *ApiService) readStorage() Storage {
 	if len(s.replicas) != 0 {
 		return s.replicas[int(s.replicaNum.Add(1))%len(s.replicas)]
 	}
 	return s.master
-}
-
-// LoginPost -
-func (s *ApiService) LoginPost(ctx context.Context, loginPostRequest openapi.LoginPostRequest) (openapi.ImplResponse, error) {
-	user, err := s.master.UserGet(ctx, loginPostRequest.Id)
-	if err != nil {
-		if errors.Is(err, models.UserNotFound) {
-			return openapi.Response(404, nil), nil
-		}
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	equal, err := s.session.CompareHashAndPassword(ctx, user.PasswordHash, loginPostRequest.Password)
-	if err != nil {
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	if !equal {
-		return openapi.Response(404, nil), err
-	}
-
-	token, err := s.session.TokenForUser(ctx, user)
-	if err != nil {
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	return openapi.Response(200, openapi.LoginPost200Response{Token: token}), nil
-}
-
-// UserGetIdGet -
-func (s *ApiService) UserGetIdGet(ctx context.Context, id string) (openapi.ImplResponse, error) {
-	user, err := s.readStorage().UserGet(ctx, id)
-	if err != nil {
-		if errors.Is(err, models.UserNotFound) {
-			return openapi.Response(404, nil), nil
-		}
-
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	return openapi.Response(200, openapi.User{
-		Id:         user.ID,
-		FirstName:  user.FirstName,
-		SecondName: user.SecondName,
-		Age:        valueOrDefault(user.Age),
-		Biography:  valueOrDefault(user.Biography),
-		City:       valueOrDefault(user.City),
-	}), nil
-}
-
-// UserRegisterPost -
-func (s *ApiService) UserRegisterPost(ctx context.Context, user openapi.UserRegisterPostRequest) (openapi.ImplResponse, error) {
-	password, err := s.session.HashPassword(ctx, user.Password)
-	if err != nil {
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	id, err := s.master.UserRegister(ctx, models.User{
-		FirstName:    user.FirstName,
-		SecondName:   user.SecondName,
-		Age:          &user.Age,
-		Biography:    &user.Biography,
-		City:         &user.City,
-		PasswordHash: password,
-	})
-	if err != nil {
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	return openapi.Response(200, openapi.UserRegisterPost200Response{UserId: id}), nil
-}
-
-// UserSearchGet -
-func (s *ApiService) UserSearchGet(ctx context.Context, firstName string, lastName string) (openapi.ImplResponse, error) {
-	if firstName == "" && lastName == "" {
-		return openapi.Response(400, "last_name or first_name should not be empty"), nil
-	}
-
-	users, err := s.readStorage().UserSearch(ctx, firstName, lastName)
-	if err != nil {
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	apiUsers := make([]openapi.User, 0, len(users))
-	for i := range users {
-		apiUsers = append(apiUsers, openapi.User{
-			Id:         users[i].ID,
-			FirstName:  users[i].FirstName,
-			SecondName: users[i].SecondName,
-			Age:        valueOrDefault(users[i].Age),
-			Biography:  valueOrDefault(users[i].Biography),
-			City:       valueOrDefault(users[i].City),
-		})
-	}
-
-	return openapi.Response(200, apiUsers), nil
 }

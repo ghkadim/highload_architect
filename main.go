@@ -1,27 +1,42 @@
 package main
 
 import (
-	"github.com/ghkadim/highload_architect/internal/mysql"
-	"github.com/ghkadim/highload_architect/internal/session"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
-	openapi "github.com/ghkadim/highload_architect/generated/go"
+	"github.com/ghkadim/highload_architect/internal/cache"
+	"github.com/ghkadim/highload_architect/internal/controller"
+	"github.com/ghkadim/highload_architect/internal/logger"
+	"github.com/ghkadim/highload_architect/internal/mysql"
+	"github.com/ghkadim/highload_architect/internal/session"
+
 	"github.com/ghkadim/highload_architect/internal/service"
 )
 
-func getenv(variable, defaultValue string) string {
-	value := os.Getenv(variable)
-	if value == "" {
+func getenv[T any](variable string, defaultValue T) T {
+	valueStr := os.Getenv(variable)
+	if valueStr == "" {
+		return defaultValue
+	}
+
+	var value T
+	_, err := fmt.Sscan(valueStr, &value)
+	if err != nil {
+		logger.Info("Failed to parse env variable %s value %s to type %T, return defaultValue %v",
+			variable, valueStr, value, defaultValue)
 		return defaultValue
 	}
 	return value
 }
 
 func main() {
-	log.Print("Server started")
+	l := logger.Init(getenv("DEBUG", false))
+	defer l.Sync()
+
+	logger.Info("Server starting")
 
 	master, err := mysql.NewStorage(
 		getenv("DB_USER", "user"),
@@ -35,6 +50,9 @@ func main() {
 
 	slaves := make([]service.Storage, 0)
 	for _, address := range strings.Split(getenv("DB_REPLICA_ADDRESSES", ""), ",") {
+		if address == "" {
+			continue
+		}
 		slave, err := mysql.NewStorage(
 			getenv("DB_USER", "user"),
 			getenv("DB_PASSWORD", "password"),
@@ -48,18 +66,28 @@ func main() {
 		slaves = append(slaves, slave)
 	}
 
-	DefaultApiService := service.NewApiService(
+	var cache_ service.Cache
+	if getenv("CACHE_ENABLED", true) {
+		cache_ = cache.NewCache(
+			getenv("CACHE_FEED_LIMIT", 1000),
+			cache.NewLoadWithRetry(master))
+		logger.Info("Feed cache enabled")
+	} else {
+		cache_ = cache.NewDisabledCache()
+		logger.Info("Feed cache disabled")
+	}
+
+	apiService := service.NewApiService(
 		master,
 		slaves,
+		cache_,
 		session.NewSession(
 			getenv("SESSION_KEY", "secret"),
 		),
 	)
-	DefaultApiController := openapi.NewDefaultApiController(
-		DefaultApiService,
+	apiController := controller.NewApiController(
+		apiService,
 	)
 
-	router := openapi.NewRouter(DefaultApiController)
-
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", apiController))
 }
