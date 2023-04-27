@@ -2,57 +2,54 @@ package service
 
 import (
 	"context"
-	"errors"
-	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
 	"net/http"
+
+	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
+	"github.com/ghkadim/highload_architect/internal/logger"
+	"github.com/ghkadim/highload_architect/internal/models"
 )
 
 // DialogUserIdListGet -
-func (s *ApiService) DialogUserIdListGet(ctx context.Context, userId string) (openapi.ImplResponse, error) {
-	// TODO - update DialogUserIdListGet with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+func (s *ApiService) DialogUserIdListGet(ctx context.Context, userID2 string) (openapi.ImplResponse, error) {
+	token := bearerToken(ctx)
+	userID1, err := s.session.ParseToken(ctx, token)
+	if err != nil {
+		logger.Error("Bad token: %v", err)
+		return openapi.Response(401, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, []DialogMessage{}) or use other options such as http.Ok ...
-	//return Response(200, []DialogMessage{}), nil
+	messages, err := s.master.DialogList(ctx, userID1, models.UserID(userID2))
+	if err != nil {
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(500, LoginPost500Response{}), nil
-
-	//TODO: Uncomment the next line to return response Response(503, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(503, LoginPost500Response{}), nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("DialogUserIdListGet method not implemented")
+	dialogMessages := make([]openapi.DialogMessage, 0, len(messages))
+	for _, msg := range messages {
+		dialogMessages = append(dialogMessages, openapi.DialogMessage{
+			From: msg.From,
+			To:   msg.To,
+			Text: msg.Text,
+		})
+	}
+	return openapi.Response(http.StatusOK, dialogMessages), nil
 }
 
 // DialogUserIdSendPost -
 func (s *ApiService) DialogUserIdSendPost(
 	ctx context.Context,
-	userId string,
+	toUserID string,
 	dialogUserIdSendPostRequest openapi.DialogUserIdSendPostRequest,
 ) (openapi.ImplResponse, error) {
-	// TODO - update DialogUserIdSendPost with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	token := bearerToken(ctx)
+	fromUserID, err := s.session.ParseToken(ctx, token)
+	if err != nil {
+		logger.Error("Bad token: %v", err)
+		return openapi.Response(401, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(500, LoginPost500Response{}), nil
-
-	//TODO: Uncomment the next line to return response Response(503, LoginPost500Response{}) or use other options such as http.Ok ...
-	//return Response(503, LoginPost500Response{}), nil
-
-	return openapi.Response(http.StatusNotImplemented, nil), errors.New("DialogUserIdSendPost method not implemented")
+	err = s.master.DialogSend(ctx, fromUserID, models.UserID(toUserID), dialogUserIdSendPostRequest.Text)
+	if err != nil {
+		return openapi.Response(500, openapi.LoginPost500Response{}), err
+	}
+	return openapi.Response(http.StatusOK, nil), nil
 }
