@@ -1,0 +1,39 @@
+name: build
+on: [push]
+
+jobs:
+  lint_and_unit_tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.ACTIONS_TOKEN }}
+      - name: Go Version
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.19'
+      - name: Configure Git
+        env:
+          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+        run: |
+          git config \
+            --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+      - name: lint
+        run: |
+          make linter-install
+          make lint
+      - name: go get
+        run: |
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+          go get -v ./...
+      - name: test
+        run: |
+          make test
+  test_api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: test api
+        run: make compose_test
