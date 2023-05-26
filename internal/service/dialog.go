@@ -26,8 +26,8 @@ func (s *ApiService) DialogUserIdListGet(ctx context.Context, userID2 string) (o
 	dialogMessages := make([]openapi.DialogMessage, 0, len(messages))
 	for _, msg := range messages {
 		dialogMessages = append(dialogMessages, openapi.DialogMessage{
-			From: msg.From,
-			To:   msg.To,
+			From: string(msg.From),
+			To:   string(msg.To),
 			Text: msg.Text,
 		})
 	}
@@ -47,7 +47,9 @@ func (s *ApiService) DialogUserIdSendPost(
 		return openapi.Response(401, nil), nil
 	}
 
-	err = s.master.DialogSend(ctx, fromUserID, models.UserID(toUserID), dialogUserIdSendPostRequest.Text)
+	err = s.master.DialogSend(
+		ctx,
+		models.DialogMessage{From: fromUserID, To: models.UserID(toUserID), Text: dialogUserIdSendPostRequest.Text})
 	if err != nil {
 		return openapi.Response(500, openapi.LoginPost500Response{}), err
 	}

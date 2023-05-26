@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math/rand"
+	"strconv"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
@@ -39,6 +42,10 @@ func NewStorage(
 	}, nil
 }
 
+func toUserID(id int64) models.UserID {
+	return models.UserID(strconv.FormatInt(id, 10))
+}
+
 func (s *Storage) UserRegister(ctx context.Context, user models.User) (models.UserID, error) {
 	result, err := s.db.ExecContext(ctx,
 		"INSERT INTO users (first_name, second_name, age, biography, city, password_hash) VALUES (?, ?, ?, ?, ?, ?)",
@@ -51,19 +58,12 @@ func (s *Storage) UserRegister(ctx context.Context, user models.User) (models.Us
 		return "", fmt.Errorf("userRegister: %v", err)
 	}
 
-	var uuid models.UserID
-	row := s.db.QueryRowContext(ctx,
-		"SELECT bin_to_uuid(uuid) FROM users WHERE id = ?", id)
-	if err := row.Scan(&uuid); err != nil {
-		return "", fmt.Errorf("userRegister get uuid: %v", err)
-	}
-
-	return uuid, nil
+	return toUserID(id), nil
 }
 
 func (s *Storage) UserGet(ctx context.Context, id models.UserID) (models.User, error) {
 	row := s.db.QueryRowContext(ctx,
-		"SELECT first_name, second_name, age, biography, city, password_hash FROM users WHERE uuid = uuid_to_bin(?)", id)
+		"SELECT first_name, second_name, age, biography, city, password_hash FROM users WHERE id = ?", id)
 	user := models.User{ID: id}
 	if err := row.Scan(&user.FirstName, &user.SecondName, &user.Age, &user.Biography, &user.City, &user.PasswordHash); err != nil {
 		if err == sql.ErrNoRows {
@@ -77,7 +77,7 @@ func (s *Storage) UserGet(ctx context.Context, id models.UserID) (models.User, e
 
 func (s *Storage) UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error) {
 	rows, err := s.db.QueryContext(ctx,
-		"SELECT bin_to_uuid(uuid), first_name, second_name, age, biography, city FROM users "+
+		"SELECT id, first_name, second_name, age, biography, city FROM users "+
 			"WHERE first_name LIKE ? AND second_name LIKE ?", firstName+"%", secondName+"%")
 	if err != nil {
 		return nil, fmt.Errorf("userSearch %s %s: %v", firstName, secondName, err)
@@ -87,9 +87,11 @@ func (s *Storage) UserSearch(ctx context.Context, firstName, secondName string) 
 	var users []models.User
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.FirstName, &user.SecondName, &user.Age, &user.Biography, &user.City); err != nil {
+		var id int64
+		if err := rows.Scan(&id, &user.FirstName, &user.SecondName, &user.Age, &user.Biography, &user.City); err != nil {
 			return nil, fmt.Errorf("userSearch %s %s: %v", firstName, secondName, err)
 		}
+		user.ID = toUserID(id)
 		users = append(users, user)
 	}
 	if err := rows.Err(); err != nil {
@@ -101,9 +103,7 @@ func (s *Storage) UserSearch(ctx context.Context, firstName, secondName string) 
 
 func (s *Storage) FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error {
 	_, err := s.db.ExecContext(ctx,
-		"INSERT INTO friends (user1_id, user2_id) VALUES ("+
-			"(SELECT id FROM users WHERE uuid = uuid_to_bin(?)),"+
-			"(SELECT id FROM users WHERE uuid = uuid_to_bin(?)))",
+		"INSERT INTO friends (user1_id, user2_id) VALUES (?, ?)",
 		userID1, userID2)
 	if err != nil {
 		return fmt.Errorf("frienAdd: %v", err)
@@ -113,9 +113,7 @@ func (s *Storage) FriendAdd(ctx context.Context, userID1, userID2 models.UserID)
 
 func (s *Storage) FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error {
 	_, err := s.db.ExecContext(ctx,
-		"DELETE FROM friends WHERE (user1_id, user2_id) = ("+
-			"(SELECT id FROM users WHERE uuid = uuid_to_bin(?)),"+
-			"(SELECT id FROM users WHERE uuid = uuid_to_bin(?)))",
+		"DELETE FROM friends WHERE (user1_id, user2_id) = (?, ?)",
 		userID1, userID2)
 	if err != nil {
 		return fmt.Errorf("frienDelete: %v", err)
@@ -123,10 +121,13 @@ func (s *Storage) FriendDelete(ctx context.Context, userID1, userID2 models.User
 	return nil
 }
 
+func toPostID(id int64) models.PostID {
+	return models.PostID(strconv.FormatInt(id, 10))
+}
+
 func (s *Storage) PostAdd(ctx context.Context, text string, author models.UserID) (models.Post, error) {
 	result, err := s.db.ExecContext(ctx,
-		"INSERT INTO posts (text, user_id) VALUES "+
-			"(?, (SELECT id FROM users WHERE uuid = uuid_to_bin(?)))", text, author)
+		"INSERT INTO posts (text, user_id) VALUES (?, ?)", text, author)
 	if err != nil {
 		return models.Post{}, fmt.Errorf("postAdd: %v", err)
 	}
@@ -135,20 +136,12 @@ func (s *Storage) PostAdd(ctx context.Context, text string, author models.UserID
 		return models.Post{}, fmt.Errorf("postAdd: %v", err)
 	}
 
-	var uuid models.PostID
-	var seqID int64
-	row := s.db.QueryRowContext(ctx,
-		"SELECT bin_to_uuid(uuid), id FROM posts WHERE id = ?", id)
-	if err := row.Scan(&uuid, &seqID); err != nil {
-		return models.Post{}, fmt.Errorf("postAdd get uuid: %v", err)
-	}
-
-	return models.Post{ID: uuid, SequentialID: seqID, Text: text, AuthorID: author}, nil
+	return models.Post{ID: toPostID(id), SequentialID: id, Text: text, AuthorID: author}, nil
 }
 
 func (s *Storage) PostUpdate(ctx context.Context, postID models.PostID, text string) error {
 	_, err := s.db.ExecContext(ctx,
-		"UPDATE posts SET text = ? WHERE uuid = uuid_to_bin(?)", text, postID)
+		"UPDATE posts SET text = ? WHERE id = ?", text, postID)
 	if err != nil {
 		return fmt.Errorf("postUpdate: %v", err)
 	}
@@ -157,7 +150,7 @@ func (s *Storage) PostUpdate(ctx context.Context, postID models.PostID, text str
 
 func (s *Storage) PostDelete(ctx context.Context, postID models.PostID) error {
 	_, err := s.db.ExecContext(ctx,
-		"DELETE FROM posts WHERE uuid = uuid_to_bin(?)", postID)
+		"DELETE FROM posts WHERE id = ?", postID)
 	if err != nil {
 		return fmt.Errorf("postDelete: %v", err)
 	}
@@ -166,26 +159,25 @@ func (s *Storage) PostDelete(ctx context.Context, postID models.PostID) error {
 
 func (s *Storage) PostGet(ctx context.Context, postID models.PostID) (models.Post, error) {
 	row := s.db.QueryRowContext(ctx,
-		"SELECT posts.id, text, bin_to_uuid(u.uuid) FROM posts "+
-			"JOIN users u ON u.id = posts.user_id WHERE posts.uuid = uuid_to_bin(?)", postID)
+		"SELECT id, text, user_id FROM posts WHERE id = ?", postID)
 	post := models.Post{ID: postID}
-	if err := row.Scan(&post.SequentialID, &post.Text, &post.AuthorID); err != nil {
+	var authorID int64
+	if err := row.Scan(&post.SequentialID, &post.Text, &authorID); err != nil {
 		if err == sql.ErrNoRows {
 			return models.Post{}, models.ErrPostNotFound
 		}
 		return models.Post{}, fmt.Errorf("postGet %q: %v", postID, err)
 	}
+	post.AuthorID = toUserID(authorID)
 	return post, nil
 }
 
 func (s *Storage) PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error) {
 	rows, err := s.db.QueryContext(ctx,
-		"SELECT posts.id, bin_to_uuid(posts.uuid), text, bin_to_uuid(u.uuid) FROM posts "+
-			"JOIN users u ON u.id = posts.user_id "+
-			"WHERE u.id IN ("+
+		"SELECT id, text, user_id FROM posts "+
+			"WHERE user_id IN ("+
 			"	SELECT user2_id FROM friends"+
-			"	JOIN users u ON u.id = friends.user1_id "+
-			"	WHERE u.uuid = uuid_to_bin(?))"+
+			"	WHERE user1_id = ?)"+
 			"ORDER BY posts.id DESC LIMIT ? OFFSET ?", userID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("postFeed: %v", err)
@@ -195,9 +187,12 @@ func (s *Storage) PostFeed(ctx context.Context, userID models.UserID, offset, li
 	posts := make([]models.Post, 0)
 	for rows.Next() {
 		var post models.Post
-		if err := rows.Scan(&post.SequentialID, &post.ID, &post.Text, &post.AuthorID); err != nil {
+		var authorID int64
+		if err := rows.Scan(&post.SequentialID, &post.Text, &authorID); err != nil {
 			return nil, fmt.Errorf("postFeed user %s: %v", userID, err)
 		}
+		post.ID = toPostID(post.SequentialID)
+		post.AuthorID = toUserID(authorID)
 		posts = append(posts, post)
 	}
 	if err := rows.Err(); err != nil {
@@ -209,8 +204,8 @@ func (s *Storage) PostFeed(ctx context.Context, userID models.UserID, offset, li
 
 func (s *Storage) UserPosts(ctx context.Context, user models.UserID, limit int) ([]models.Post, error) {
 	rows, err := s.db.QueryContext(ctx,
-		"SELECT posts.id, bin_to_uuid(posts.uuid), text FROM posts "+
-			"JOIN users u ON u.id = posts.user_id WHERE u.uuid = uuid_to_bin(?) "+
+		"SELECT id, text FROM posts "+
+			"WHERE user_id = ? "+
 			"ORDER BY id DESC LIMIT ?", user, limit)
 	if err != nil {
 		return nil, fmt.Errorf("userPosts: %v", err)
@@ -220,9 +215,10 @@ func (s *Storage) UserPosts(ctx context.Context, user models.UserID, limit int) 
 	posts := make([]models.Post, 0)
 	for rows.Next() {
 		post := models.Post{AuthorID: user}
-		if err := rows.Scan(&post.SequentialID, &post.ID, &post.Text); err != nil {
+		if err := rows.Scan(&post.SequentialID, &post.Text); err != nil {
 			return nil, fmt.Errorf("userPosts user %s: %v", user, err)
 		}
+		post.ID = toPostID(post.SequentialID)
 		posts = append(posts, post)
 	}
 	if err := rows.Err(); err != nil {
@@ -234,12 +230,7 @@ func (s *Storage) UserPosts(ctx context.Context, user models.UserID, limit int) 
 
 func (s *Storage) UserFriends(ctx context.Context, user models.UserID) ([]models.UserID, error) {
 	rows, err := s.db.QueryContext(ctx,
-		"SELECT bin_to_uuid(u.uuid) FROM friends "+
-			"JOIN users u ON u.id = user2_id "+
-			"WHERE user2_id IN ( "+
-			" 	SELECT user2_id FROM friends "+
-			" 	JOIN users u ON u.id = friends.user1_id "+
-			" 	WHERE u.uuid = uuid_to_bin(?))", user)
+		"SELECT user2_id FROM friends WHERE user1_id = ?", user)
 	if err != nil {
 		return nil, fmt.Errorf("userFriends: %v", err)
 	}
@@ -247,15 +238,65 @@ func (s *Storage) UserFriends(ctx context.Context, user models.UserID) ([]models
 
 	users := make([]models.UserID, 0)
 	for rows.Next() {
-		var id models.UserID
+		var id int64
 		if err := rows.Scan(&id); err != nil {
 			return nil, fmt.Errorf("userFriends user %s: %v", user, err)
 		}
-		users = append(users, id)
+		users = append(users, toUserID(id))
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("userFriends user %s: %v", user, err)
 	}
 
 	return users, nil
+}
+
+const dialogMessageMaxSubID = 10
+
+func dialogMessageShardingID(userID1, userID2 models.UserID) string {
+	if strings.Compare(string(userID1), string(userID2)) < 0 {
+		return string(userID1) + "/" + string(userID2)
+	} else {
+		return string(userID2) + "/" + string(userID1)
+	}
+}
+
+func (s *Storage) DialogSend(ctx context.Context, message models.DialogMessage) error {
+	shardingID := dialogMessageShardingID(message.From, message.To)
+	shardingSubID := rand.Intn(dialogMessageMaxSubID)
+	_, err := s.db.ExecContext(ctx,
+		"INSERT INTO dialogs (from_user_id, to_user_id, text, sharding_id, sharding_sub_id) VALUES (?,?,?,?,?)",
+		message.From, message.To, message.Text, shardingID, shardingSubID)
+	if err != nil {
+		return fmt.Errorf("dialogSend: %v", err)
+	}
+	return nil
+}
+
+func (s *Storage) DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error) {
+	shardingID := dialogMessageShardingID(userID1, userID2)
+	rows, err := s.db.QueryContext(ctx,
+		"SELECT from_user_id, to_user_id, text FROM dialogs "+
+			"WHERE sharding_id = ? ORDER BY id DESC", shardingID)
+	if err != nil {
+		return nil, fmt.Errorf("dialogList %s %s: %v", userID1, userID2, err)
+	}
+	defer rows.Close()
+
+	var messages []models.DialogMessage
+	for rows.Next() {
+		var message models.DialogMessage
+		var from_id, to_id int64
+		if err := rows.Scan(&from_id, &to_id, &message.Text); err != nil {
+			return nil, fmt.Errorf("dialogList %s %s: %v", userID1, userID2, err)
+		}
+		message.From = toUserID(from_id)
+		message.To = toUserID(to_id)
+		messages = append(messages, message)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("dialogList %s %s: %v", userID1, userID2, err)
+	}
+
+	return messages, nil
 }

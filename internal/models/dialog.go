@@ -1,7 +1,7 @@
 package models
 
 type DialogMessage struct {
-	From string
-	To   string
+	From UserID
+	To   UserID
 	Text string
 }
