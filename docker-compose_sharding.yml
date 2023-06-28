@@ -1,0 +1,94 @@
+version: '3.3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_DATABASE: 'db'
+      DB_USER: 'user'
+      DB_PASSWORD: 'password'
+      DB_ADDRESS: 'proxysql:6033'
+      CACHE_ENABLED: 'true'
+      DEBUG: 'true'
+      CACHE_FEED_LIMIT: '1000'
+    depends_on:
+      - proxysql
+    ports:
+      - '8080:8080'
+    expose:
+      - '8080'
+
+  db_1:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3361:3306'
+    expose:
+      - '3361'
+    volumes:
+      - my-db_1:/var/lib/mysql
+      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ${PWD}/db/single/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+
+  db_2:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3362:3306'
+    expose:
+      - '3362'
+    volumes:
+      - my-db_2:/var/lib/mysql
+      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ${PWD}/db/single/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+
+  db_3:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3363:3306'
+    expose:
+      - '3363'
+    volumes:
+      - my-db_3:/var/lib/mysql
+      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ${PWD}/db/single/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+
+  proxysql:
+    build:
+      context: proxysql
+      dockerfile: Dockerfile
+    container_name: proxysql
+    depends_on:
+      - db_1
+      - db_2
+      - db_3
+    volumes:
+      - proxysql-data:/var/lib/proxysql
+    ports:
+      # Mysql Client Port
+      - "6033:6033"
+      # Mysql Admin Port
+      - "6032:6032"
+
+volumes:
+  my-db_1:
+  my-db_2:
+  my-db_3:
+  proxysql-data:

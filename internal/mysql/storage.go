@@ -4,18 +4,23 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"math/rand"
+	"hash/fnv"
 	"strconv"
 	"strings"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/ghkadim/highload_architect/internal/models"
 )
 
+type DedicatedShardID map[models.UserID]string
+
 type Storage struct {
-	db *sql.DB
+	db                 *sql.DB
+	dedicatedShards    DedicatedShardID
+	dialogsIDGenerator *snowflake.Node
 }
 
 func NewStorage(
@@ -23,13 +28,15 @@ func NewStorage(
 	password string,
 	address string,
 	database string,
+	dedicatedShards DedicatedShardID,
 ) (*Storage, error) {
 	cfg := mysql.Config{
-		User:   user,
-		Passwd: password,
-		Net:    "tcp",
-		Addr:   address,
-		DBName: database,
+		User:                 user,
+		Passwd:               password,
+		Net:                  "tcp",
+		Addr:                 address,
+		DBName:               database,
+		AllowNativePasswords: true,
 	}
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())
@@ -37,8 +44,15 @@ func NewStorage(
 		return nil, err
 	}
 
+	dialogsIDGenerator, err := snowflake.NewNode(1)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Storage{
-		db: db,
+		db:                 db,
+		dedicatedShards:    dedicatedShards,
+		dialogsIDGenerator: dialogsIDGenerator,
 	}, nil
 }
 
@@ -251,33 +265,75 @@ func (s *Storage) UserFriends(ctx context.Context, user models.UserID) ([]models
 	return users, nil
 }
 
-const dialogMessageMaxSubID = 10
-
-func dialogMessageShardingID(userID1, userID2 models.UserID) string {
+func orderUserID(userID1, userID2 models.UserID) (models.UserID, models.UserID) {
 	if strings.Compare(string(userID1), string(userID2)) < 0 {
-		return string(userID1) + "/" + string(userID2)
-	} else {
-		return string(userID2) + "/" + string(userID1)
+		return userID1, userID2
 	}
+	return userID2, userID1
+}
+
+const dialogMessageShardingIDDivider = 1e3
+
+func (s *Storage) dialogMessageShardingID(userID1, userID2 models.UserID) string {
+	userID1, userID2 = orderUserID(userID1, userID2)
+
+	if id, ok := s.dedicatedShards[userID1]; ok {
+		return id
+	}
+	if id, ok := s.dedicatedShards[userID2]; ok {
+		return id
+	}
+
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(userID1))
+	_, _ = h.Write([]byte(userID2))
+	return fmt.Sprintf("%03d", h.Sum32()%dialogMessageShardingIDDivider)
+}
+
+func shardRoute(query string, shardingID string) string {
+	return fmt.Sprintf("/* sharding_id=%s */ %s", shardingID, query)
 }
 
 func (s *Storage) DialogSend(ctx context.Context, message models.DialogMessage) error {
-	shardingID := dialogMessageShardingID(message.From, message.To)
-	shardingSubID := rand.Intn(dialogMessageMaxSubID)
-	_, err := s.db.ExecContext(ctx,
-		"INSERT INTO dialogs (from_user_id, to_user_id, text, sharding_id, sharding_sub_id) VALUES (?,?,?,?,?)",
-		message.From, message.To, message.Text, shardingID, shardingSubID)
+	shardingID := s.dialogMessageShardingID(message.From, message.To)
+	if message.ID == 0 {
+		message.ID = models.DialogMessageID(s.dialogsIDGenerator.Generate())
+	}
+	var err error
+	_, err = s.db.ExecContext(ctx,
+		shardRoute("INSERT INTO dialogs (id, from_user_id, to_user_id, text, sharding_id) VALUES (?,?,?,?,?)", shardingID),
+		message.ID, message.From, message.To, message.Text, shardingID)
 	if err != nil {
 		return fmt.Errorf("dialogSend: %v", err)
 	}
 	return nil
 }
 
+func (s *Storage) DialogBulkInsert(ctx context.Context, messages []models.DialogMessage) error {
+	stmt := "INSERT INTO dialogs (id, from_user_id, to_user_id, text, sharding_id) VALUES "
+	binds := make([]any, 0, len(messages)*5)
+	for i, message := range messages {
+		shardingID := s.dialogMessageShardingID(message.From, message.To)
+		if i != 0 {
+			stmt += ","
+		}
+		stmt += "ROW(?,?,?,?,?)"
+		binds = append(binds, message.ID, message.From, message.To, message.Text, shardingID)
+	}
+	_, err := s.db.ExecContext(ctx, stmt, binds...)
+	if err != nil {
+		return fmt.Errorf("dialogBulkInsert: %v", err)
+	}
+	return nil
+}
+
 func (s *Storage) DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error) {
-	shardingID := dialogMessageShardingID(userID1, userID2)
+	shardingID := s.dialogMessageShardingID(userID1, userID2)
 	rows, err := s.db.QueryContext(ctx,
-		"SELECT from_user_id, to_user_id, text FROM dialogs "+
-			"WHERE sharding_id = ? ORDER BY id DESC", shardingID)
+		shardRoute("SELECT from_user_id, to_user_id, text FROM dialogs "+
+			"WHERE (from_user_id = ? and to_user_id = ?) or (from_user_id = ? and to_user_id = ?) "+
+			"ORDER BY id DESC", shardingID),
+		userID1, userID2, userID2, userID1)
 	if err != nil {
 		return nil, fmt.Errorf("dialogList %s %s: %v", userID1, userID2, err)
 	}
@@ -299,4 +355,62 @@ func (s *Storage) DialogList(ctx context.Context, userID1, userID2 models.UserID
 	}
 
 	return messages, nil
+}
+
+func (s *Storage) DialogMatchingShard(ctx context.Context, matchExpr string, fromID models.DialogMessageID, limit int64) ([]models.DialogMessage, error) {
+	rows, err := s.db.QueryContext(ctx,
+		"SELECT id, from_user_id, to_user_id, text FROM dialogs "+
+			"WHERE sharding_id REGEXP ? AND id > ? ORDER BY id ASC LIMIT ?", matchExpr, fromID, limit)
+
+	if err != nil {
+		return nil, fmt.Errorf("dialogMatchingShard %s: %v", matchExpr, err)
+	}
+	defer rows.Close()
+
+	var messages []models.DialogMessage
+	for rows.Next() {
+		var message models.DialogMessage
+		var from_id, to_id int64
+		if err := rows.Scan(&message.ID, &from_id, &to_id, &message.Text); err != nil {
+			return nil, fmt.Errorf("dialogMatchingShard scan %s: %v", matchExpr, err)
+		}
+		message.From = toUserID(from_id)
+		message.To = toUserID(to_id)
+		messages = append(messages, message)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("dialogMatchingShard next row %s: %v", matchExpr, err)
+	}
+
+	return messages, nil
+}
+
+func (s *Storage) DialogsNotMatchingShardDelete(ctx context.Context, matchExpr string) (int64, error) {
+	res, err := s.db.ExecContext(ctx, "DELETE FROM dialogs WHERE sharding_id NOT REGEXP ?", matchExpr)
+	if err != nil {
+		return 0, fmt.Errorf("DialogsNotMatchingShardDelete exec: %v", err)
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("DialogsNotMatchingShardDelete get rows affected: %v", err)
+	}
+	return affected, nil
+}
+
+func (s *Storage) DialogsDelete(ctx context.Context, ids []models.DialogMessageID) error {
+	stmt := "DELETE FROM dialogs WHERE id IN ("
+	binds := make([]any, 0, len(ids))
+	for i, id := range ids {
+		if i != 0 {
+			stmt += ","
+		}
+		stmt += "?"
+		binds = append(binds, id)
+	}
+	stmt += ")"
+	_, err := s.db.ExecContext(ctx, stmt, binds...)
+	if err != nil {
+		return fmt.Errorf("DialogsDelete: %v", err)
+	}
+	return nil
 }

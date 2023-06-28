@@ -1,0 +1,29 @@
+before:
+  - address: localhost:3361
+    shardMatchRegexp: '(00\d|0[1-9]\d|[1-4]\d{2}|500)\d*'
+    user: user
+    password: password
+    database: db
+  - address: localhost:3362
+    shardMatchRegexp: '(50[1-9]|5[1-9]\d|[6-9]\d{2})\d*'
+    user: user
+    password: password
+    database: db
+after:
+  - address: localhost:3361
+    shardMatchRegexp: '(00\d|0[1-9]\d|[12]\d{2}|3[0-2]\d|33[0-3])\d*'
+    user: user
+    password: password
+    database: db
+  - address: localhost:3362
+    shardMatchRegexp: '(33[4-9]|3[4-9]\d|[45]\d{2}|6[0-5]\d|66[0-6])\d*'
+    user: user
+    password: password
+    database: db
+  - address: localhost:3363
+    shardMatchRegexp: '(66[7-9]|6[7-9]\d|[7-9]\d{2})\d*'
+    user: user
+    password: password
+    database: db
+fromId: 0
+limit: 100

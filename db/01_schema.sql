@@ -31,13 +31,9 @@ CREATE TABLE `posts`
 
 CREATE TABLE `dialogs`
 (
-    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `id` BIGINT PRIMARY KEY,
     `from_user_id` BIGINT NOT NULL,
     `to_user_id` BIGINT NOT NULL,
     `text` BLOB DEFAULT NULL,
-    `sharding_id` VARCHAR(255) NOT NULL,
-    `sharding_sub_id` BIGINT NOT NULL,
-    KEY `sharding_id_IDX` (`sharding_id`) USING BTREE,
-    CONSTRAINT `from_user_id_FK` FOREIGN KEY (`from_user_id`) REFERENCES users(`id`) ON DELETE CASCADE,
-    CONSTRAINT `to_user_id_FK` FOREIGN KEY (`to_user_id`) REFERENCES users(`id`) ON DELETE CASCADE
+    `sharding_id` VARCHAR(32) NOT NULL
 );
