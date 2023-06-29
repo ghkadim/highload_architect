@@ -12,4 +12,3 @@ services:
       - ${PWD}:/src
     depends_on:
       - app
-      - db

@@ -1,13 +1,15 @@
-BINARY_NAME=bin/app
+BINARY_APP_NAME=bin/app
+BINARY_RESHARD_NAME=bin/reshard
 COMPOSE="docker-compose.yml"
 
 .PHONY: build
 build: test
-	GOARCH=amd64 go build -o ${BINARY_NAME} main.go
+	GOARCH=amd64 go build -o ${BINARY_APP_NAME} cmd/app/main.go
+	GOARCH=amd64 go build -o ${BINARY_RESHARD_NAME} cmd/reshard/main.go
 
 .PHONY: run
 run:
-	./${BINARY_NAME}
+	./${BINARY_APP_NAME}
 
 .PHONY: build_and_run
 build_and_run: build run
@@ -31,7 +33,7 @@ test_api:
 .PHONY: clean
 clean:
 	go clean
-	rm ${BINARY_NAME}
+	rm ${BINARY_APP_NAME}
 
 .PHONY: compose_build
 compose_build:
@@ -51,10 +53,16 @@ compose_clean:
 
 .PHONY: compose_test
 compose_test: compose_build
-	echo Test with cache enabled
-	docker-compose -f docker-compose.yml \
+	echo Test dialog sharding
+	docker-compose -f docker-compose_sharding.yml \
 		-f docker-compose_test.yml \
-		up --abort-on-container-exit --exit-code-from test
+		up -e TEST_BEFORE_RESHARDING=1 \
+		--abort-on-container-exit --exit-code-from test
+
+#	echo Test with cache enabled
+#	docker-compose -f docker-compose.yml \
+#		-f docker-compose_test.yml \
+#		up --abort-on-container-exit --exit-code-from test
 
 	echo Test with cache disabled
 	docker-compose -f docker-compose.yml \

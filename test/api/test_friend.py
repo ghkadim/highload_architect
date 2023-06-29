@@ -20,7 +20,7 @@ def test_add_delete_friend(default_user, make_user):
 
 
 def test_add_delete_unknown_friend(default_user, make_user):
-    user_not_exists = "359d95e6-b099-11ed-82fd-0242ac150002"
+    user_not_exists = "12345678"
     friend = make_user()
 
     with pytest.raises(openapi_client.exceptions.ServiceException):

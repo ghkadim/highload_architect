@@ -18,6 +18,8 @@ type Storage interface {
 	PostDelete(ctx context.Context, postID models.PostID) error
 	PostGet(ctx context.Context, postID models.PostID) (models.Post, error)
 	PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error)
+	DialogSend(ctx context.Context, message models.DialogMessage) error
+	DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error)
 }
 
 type Cache interface {

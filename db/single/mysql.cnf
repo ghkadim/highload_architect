@@ -1,2 +1,3 @@
 [mysqld]
 server_id = 1
+default-authentication-plugin=mysql_native_password

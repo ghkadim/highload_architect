@@ -4,7 +4,7 @@ from openapi_client.model.user_register_post_request import UserRegisterPostRequ
 from openapi_client.model.login_post_request import LoginPostRequest
 
 
-class User():
+class User:
     def __init__(self,
                  first_name="first_name",
                  second_name="second_name",
@@ -14,9 +14,23 @@ class User():
         self.first_name = first_name
         self.second_name = second_name
         self.password = password
-        self.user_id = None
+        self.user_id = user_id
         if user_id is None:
             self.register()
+
+    @staticmethod
+    def search(first_name, second_name):
+        users = openapi_client.api.default_api.DefaultApi().\
+            user_search_get(first_name, second_name)
+        resp = []
+        for u in users:
+            resp.append(User(
+                first_name=u.first_name,
+                second_name=u.second_name,
+                password="password",
+                user_id=u.id,
+            ))
+        return resp
 
     def register(self):
         res = self.api.user_register_post(
