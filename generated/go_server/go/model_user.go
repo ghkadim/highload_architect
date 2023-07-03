@@ -23,6 +23,9 @@ type User struct {
 	// Возраст
 	Age int32 `json:"age,omitempty"`
 
+	// Дата рождения
+	Birthdate string `json:"birthdate,omitempty"`
+
 	// Интересы
 	Biography string `json:"biography,omitempty"`
 

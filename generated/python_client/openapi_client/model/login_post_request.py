@@ -136,7 +136,7 @@ class LoginPostRequest(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
-            id (str): [optional]  # noqa: E501
+            id (str): Идентификатор пользователя. [optional]  # noqa: E501
             password (str): [optional]  # noqa: E501
         """
 
@@ -223,7 +223,7 @@ class LoginPostRequest(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
-            id (str): [optional]  # noqa: E501
+            id (str): Идентификатор пользователя. [optional]  # noqa: E501
             password (str): [optional]  # noqa: E501
         """
 

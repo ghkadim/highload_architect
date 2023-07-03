@@ -55,7 +55,7 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
-    user_id = "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58" # str | 
+    user_id = "user_id_example" # str | 
 
     # example passing only required values which don't have defaults set
     try:
@@ -134,7 +134,7 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
-    user_id = "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58" # str | 
+    user_id = "user_id_example" # str | 
     dialog_user_id_send_post_request = DialogUserIdSendPostRequest(
         text="Привет, как дела?",
     ) # DialogUserIdSendPostRequest |  (optional)
@@ -222,7 +222,7 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
-    user_id = "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58" # str | 
+    user_id = "user_id_example" # str | 
 
     # example passing only required values which don't have defaults set
     try:
@@ -299,7 +299,7 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
-    user_id = "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58" # str | 
+    user_id = "user_id_example" # str | 
 
     # example passing only required values which don't have defaults set
     try:
@@ -371,7 +371,7 @@ with openapi_client.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
     login_post_request = LoginPostRequest(
-        id="234",
+        id="id_example",
         password="Секретная строка",
     ) # LoginPostRequest |  (optional)
 
@@ -612,8 +612,8 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
-    offset = 100 # int |  (optional) if omitted the server will use the default value of 0
-    limit = 10 # int |  (optional) if omitted the server will use the default value of 10
+    offset = 100 # float |  (optional) if omitted the server will use the default value of 0
+    limit = 10 # float |  (optional) if omitted the server will use the default value of 10
 
     # example passing only required values which don't have defaults set
     # and optional values
@@ -629,8 +629,8 @@ with openapi_client.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **offset** | **int**|  | [optional] if omitted the server will use the default value of 0
- **limit** | **int**|  | [optional] if omitted the server will use the default value of 10
+ **offset** | **float**|  | [optional] if omitted the server will use the default value of 0
+ **limit** | **float**|  | [optional] if omitted the server will use the default value of 10
 
 ### Return type
 
@@ -837,7 +837,7 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
-    id = "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58" # str | Идентификатор пользователя
+    id = "id_example" # str | Идентификатор пользователя
 
     # example passing only required values which don't have defaults set
     try:
@@ -913,6 +913,7 @@ with openapi_client.ApiClient() as api_client:
         first_name="Имя",
         second_name="Фамилия",
         age=18,
+        birthdate=dateutil_parser('Wed Feb 01 03:00:00 MSK 2017').date(),
         biography="Хобби, интересы и т.п.",
         city="Москва",
         password="Секретная строка",

@@ -506,7 +506,7 @@ paths:
           description: Оффсет с которого начинать выдачу
           example: 100
           minimum: 0
-          type: integer
+          type: number
         style: form
       - explode: true
         in: query
@@ -517,7 +517,7 @@ paths:
           description: "Лимит, ограничивающий кол-во возвращенных сущностей"
           example: 10
           minimum: 1
-          type: integer
+          type: number
         style: form
       responses:
         "200":
@@ -688,22 +688,26 @@ components:
             type: integer
           style: simple
   schemas:
+    BirthDate:
+      description: Дата рождения
+      example: 2017-02-01
+      format: date
+      type: string
     UserId:
       description: Идентификатор пользователя
-      example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
       type: string
     User:
       example:
+        birthdate: 2017-02-01T00:00:00.000+00:00
         city: Москва
         second_name: Фамилия
-        id: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+        id: id
         biography: "Хобби, интересы и т.п."
         first_name: Имя
         age: 18
       properties:
         id:
           description: Идентификатор пользователя
-          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
           type: string
         first_name:
           description: Имя
@@ -717,6 +721,11 @@ components:
           description: Возраст
           example: 18
           type: integer
+        birthdate:
+          description: Дата рождения
+          example: 2017-02-01
+          format: date
+          type: string
         biography:
           description: Интересы
           example: "Хобби, интересы и т.п."
@@ -742,17 +751,15 @@ components:
       type: string
     DialogMessage:
       example:
-        from: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
-        to: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+        from: from
+        to: to
         text: "Привет, как дела?"
       properties:
         from:
           description: Идентификатор пользователя
-          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
           type: string
         to:
           description: Идентификатор пользователя
-          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
           type: string
         text:
           description: Текст сообщения
@@ -766,7 +773,7 @@ components:
     Post:
       description: Пост пользователя
       example:
-        author_user_id: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
+        author_user_id: author_user_id
         id: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
         text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod\
           \ tempor incididunt ut labore et dolore magna aliqua. Lectus mauris ultrices\
@@ -784,13 +791,12 @@ components:
           type: string
         author_user_id:
           description: Идентификатор пользователя
-          example: e4d2e6b0-cde2-42c5-aac3-0b8316f21e58
           type: string
       type: object
     _login_post_request:
       properties:
         id:
-          example: "234"
+          description: Идентификатор пользователя
           type: string
         password:
           example: Секретная строка
@@ -829,8 +835,14 @@ components:
           example: Фамилия
           type: string
         age:
+          deprecated: true
           example: 18
           type: integer
+        birthdate:
+          description: Дата рождения
+          example: 2017-02-01
+          format: date
+          type: string
         biography:
           example: "Хобби, интересы и т.п."
           type: string

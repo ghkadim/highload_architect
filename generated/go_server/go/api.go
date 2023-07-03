@@ -48,7 +48,7 @@ type DefaultApiServicer interface {
 	LoginPost(context.Context, LoginPostRequest) (ImplResponse, error)
 	PostCreatePost(context.Context, PostCreatePostRequest) (ImplResponse, error)
 	PostDeleteIdPut(context.Context, string) (ImplResponse, error)
-	PostFeedGet(context.Context, int32, int32) (ImplResponse, error)
+	PostFeedGet(context.Context, float32, float32) (ImplResponse, error)
 	PostGetIdGet(context.Context, string) (ImplResponse, error)
 	PostUpdatePut(context.Context, PostUpdatePutRequest) (ImplResponse, error)
 	UserGetIdGet(context.Context, string) (ImplResponse, error)

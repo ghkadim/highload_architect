@@ -82,7 +82,7 @@ configuration = openapi_client.Configuration(
 with openapi_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
-    user_id = "e4d2e6b0-cde2-42c5-aac3-0b8316f21e58" # str | 
+    user_id = "user_id_example" # str | 
 
     try:
         api_response = api_instance.dialog_user_id_list_get(user_id)
@@ -127,10 +127,13 @@ Class | Method | HTTP request | Description
  - [UserRegisterPostRequest](docs/UserRegisterPostRequest.md)
 
 
+<a id="documentation-for-authorization"></a>
 ## Documentation For Authorization
 
 
-## bearerAuth
+Authentication schemes defined for the API:
+<a id="bearerAuth"></a>
+### bearerAuth
 
 - **Type**: Bearer authentication
 

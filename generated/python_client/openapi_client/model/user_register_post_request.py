@@ -84,6 +84,7 @@ class UserRegisterPostRequest(ModelNormal):
             'first_name': (str,),  # noqa: E501
             'second_name': (str,),  # noqa: E501
             'age': (int,),  # noqa: E501
+            'birthdate': (date,),  # noqa: E501
             'biography': (str,),  # noqa: E501
             'city': (str,),  # noqa: E501
             'password': (str,),  # noqa: E501
@@ -98,6 +99,7 @@ class UserRegisterPostRequest(ModelNormal):
         'first_name': 'first_name',  # noqa: E501
         'second_name': 'second_name',  # noqa: E501
         'age': 'age',  # noqa: E501
+        'birthdate': 'birthdate',  # noqa: E501
         'biography': 'biography',  # noqa: E501
         'city': 'city',  # noqa: E501
         'password': 'password',  # noqa: E501
@@ -147,6 +149,7 @@ class UserRegisterPostRequest(ModelNormal):
             first_name (str): [optional]  # noqa: E501
             second_name (str): [optional]  # noqa: E501
             age (int): [optional]  # noqa: E501
+            birthdate (date): Дата рождения. [optional]  # noqa: E501
             biography (str): [optional]  # noqa: E501
             city (str): [optional]  # noqa: E501
             password (str): [optional]  # noqa: E501
@@ -238,6 +241,7 @@ class UserRegisterPostRequest(ModelNormal):
             first_name (str): [optional]  # noqa: E501
             second_name (str): [optional]  # noqa: E501
             age (int): [optional]  # noqa: E501
+            birthdate (date): Дата рождения. [optional]  # noqa: E501
             biography (str): [optional]  # noqa: E501
             city (str): [optional]  # noqa: E501
             password (str): [optional]  # noqa: E501

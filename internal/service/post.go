@@ -59,7 +59,7 @@ func (s *ApiService) PostDeleteIdPut(ctx context.Context, id string) (openapi.Im
 }
 
 // PostFeedGet -
-func (s *ApiService) PostFeedGet(ctx context.Context, offset int32, limit int32) (openapi.ImplResponse, error) {
+func (s *ApiService) PostFeedGet(ctx context.Context, offset, limit float32) (openapi.ImplResponse, error) {
 	token := bearerToken(ctx)
 	userID, err := s.session.ParseToken(ctx, token)
 	if err != nil {
