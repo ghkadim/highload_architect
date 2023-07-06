@@ -8,13 +8,13 @@ import (
 	"strings"
 
 	"github.com/ghkadim/highload_architect/internal/cache"
-	"github.com/ghkadim/highload_architect/internal/controller"
+	"github.com/ghkadim/highload_architect/internal/controller/openapi"
 	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/models"
 	"github.com/ghkadim/highload_architect/internal/mysql"
-	"github.com/ghkadim/highload_architect/internal/session"
-
+	"github.com/ghkadim/highload_architect/internal/server"
 	"github.com/ghkadim/highload_architect/internal/service"
+	"github.com/ghkadim/highload_architect/internal/session"
 )
 
 func main() {
@@ -64,16 +64,19 @@ func main() {
 		logger.Info("Feed cache disabled")
 	}
 
-	apiService := service.NewApiService(
+	session_ := session.NewSession(
+		getenv("SESSION_KEY", "secret"),
+	)
+
+	apiService := service.NewService(
 		master,
 		slaves,
 		cache_,
-		session.NewSession(
-			getenv("SESSION_KEY", "secret"),
-		),
+		session_,
 	)
-	apiController := controller.NewApiController(
-		apiService,
+	apiController := server.NewServer(
+		openapi.NewRouter(
+			openapi.NewController(apiService, session_)),
 	)
 
 	log.Fatal(http.ListenAndServe(":8080", apiController))

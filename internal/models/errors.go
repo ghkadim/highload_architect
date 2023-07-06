@@ -7,4 +7,5 @@ var (
 	ErrPostNotFound = errors.New("post not found")
 	ErrFeedNotFound = errors.New("feed not found")
 	ErrFeedPartial  = errors.New("feed partial response")
+	ErrUnauthorized = errors.New("unauthorized")
 )

@@ -2,45 +2,26 @@ package service
 
 import (
 	"context"
-	"net/http"
 
-	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
-	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/models"
 )
 
-// FriendDeleteUserIdPut -
-func (s *ApiService) FriendDeleteUserIdPut(ctx context.Context, friendUserID string) (openapi.ImplResponse, error) {
-	token := bearerToken(ctx)
-	userID, err := s.session.ParseToken(ctx, token)
+func (s *service) FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error {
+	err := s.master.FriendDelete(ctx, userID1, userID2)
 	if err != nil {
-		logger.Error("Bad token: %v", err)
-		return openapi.Response(401, nil), nil
+		return err
 	}
 
-	err = s.master.FriendDelete(ctx, userID, models.UserID(friendUserID))
-	if err != nil {
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	s.cache.FriendDelete(userID, models.UserID(friendUserID))
-	return openapi.Response(http.StatusOK, nil), nil
+	s.cache.FriendDelete(userID1, userID2)
+	return nil
 }
 
-// FriendSetUserIdPut -
-func (s *ApiService) FriendSetUserIdPut(ctx context.Context, friendUserID string) (openapi.ImplResponse, error) {
-	token := bearerToken(ctx)
-	userID, err := s.session.ParseToken(ctx, token)
+func (s *service) FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error {
+	err := s.master.FriendAdd(ctx, userID1, userID2)
 	if err != nil {
-		logger.Error("Bad token: %v", err)
-		return openapi.Response(401, nil), nil
+		return err
 	}
 
-	err = s.master.FriendAdd(ctx, userID, models.UserID(friendUserID))
-	if err != nil {
-		return openapi.Response(500, openapi.LoginPost500Response{}), err
-	}
-
-	s.cache.FriendAdd(userID, models.UserID(friendUserID))
-	return openapi.Response(http.StatusOK, nil), nil
+	s.cache.FriendAdd(userID1, userID2)
+	return nil
 }
