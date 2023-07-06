@@ -19,14 +19,14 @@ jobs:
         run: |
           git config \
             --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-      - name: lint
-        run: |
-          make linter-install
-          make lint
       - name: go get
         run: |
           git config --global url."git@github.com:".insteadOf "https://github.com/"
           go get -v ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.53
       - name: test
         run: |
           make test
