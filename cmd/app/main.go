@@ -8,11 +8,13 @@ import (
 	"strings"
 
 	"github.com/ghkadim/highload_architect/internal/cache"
-	"github.com/ghkadim/highload_architect/internal/controller/openapi"
 	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/models"
 	"github.com/ghkadim/highload_architect/internal/mysql"
+	"github.com/ghkadim/highload_architect/internal/rabbitmq"
 	"github.com/ghkadim/highload_architect/internal/server"
+	"github.com/ghkadim/highload_architect/internal/server/controller/openapi"
+	"github.com/ghkadim/highload_architect/internal/server/controller/websocket"
 	"github.com/ghkadim/highload_architect/internal/service"
 	"github.com/ghkadim/highload_architect/internal/session"
 )
@@ -68,16 +70,46 @@ func main() {
 		getenv("SESSION_KEY", "secret"),
 	)
 
+	eventConsumer, err := rabbitmq.NewConsumer(
+		getenv("RMQ_USER", "guest"),
+		getenv("RMQ_PASSWORD", "guest"),
+		getenv("RMQ_ADDRESS", "localhost:5672"),
+		getenv("EVENT_CONSUMER_QUEUE_LEN", 1000),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create event consumer: %v", err)
+	}
+
+	eventPublisher, err := rabbitmq.NewPublisher(
+		getenv("RMQ_USER", "guest"),
+		getenv("RMQ_PASSWORD", "guest"),
+		getenv("RMQ_ADDRESS", "localhost:5672"),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create event publisher: %v", err)
+	}
+
 	apiService := service.NewService(
 		master,
 		slaves,
 		cache_,
 		session_,
+		eventPublisher,
+		eventConsumer,
 	)
-	apiController := server.NewServer(
+
+	routers := []server.Router{
 		openapi.NewRouter(
 			openapi.NewController(apiService, session_)),
-	)
+	}
+
+	if getenv("ASYNCAPI_ENABLED", true) {
+		logger.Info("Async API enabled")
+		routers = append(routers, websocket.NewRouter(
+			websocket.NewController(apiService, session_)))
+	}
+
+	apiController := server.NewServer(routers...)
 
 	log.Fatal(http.ListenAndServe(":8080", apiController))
 }

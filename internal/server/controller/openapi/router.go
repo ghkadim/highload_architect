@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/ghkadim/highload_architect/generated/go_server/go"
-	"github.com/ghkadim/highload_architect/internal/controller"
 	"github.com/ghkadim/highload_architect/internal/logger"
+	"github.com/ghkadim/highload_architect/internal/server/controller"
 )
 
 type router struct {

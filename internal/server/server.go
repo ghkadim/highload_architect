@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/ghkadim/highload_architect/internal/controller"
+	"github.com/ghkadim/highload_architect/internal/server/controller"
 )
 
 type Router interface {

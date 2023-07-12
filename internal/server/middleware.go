@@ -30,6 +30,7 @@ func authorize(inner http.Handler) http.Handler {
 
 type responseWriter struct {
 	http.ResponseWriter
+	http.Hijacker
 	code int
 }
 
@@ -42,7 +43,7 @@ func logger(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		writer := &responseWriter{ResponseWriter: w}
+		writer := &responseWriter{ResponseWriter: w, Hijacker: w.(http.Hijacker)}
 
 		inner.ServeHTTP(writer, r)
 

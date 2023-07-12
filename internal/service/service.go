@@ -5,6 +5,8 @@ import (
 	"sync/atomic"
 
 	"github.com/ghkadim/highload_architect/internal/models"
+	"github.com/ghkadim/highload_architect/internal/result"
+	"github.com/ghkadim/highload_architect/internal/utils/closer"
 )
 
 type Storage interface {
@@ -18,6 +20,7 @@ type Storage interface {
 	PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error)
 	FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error
 	FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error
+	UserFriends(ctx context.Context, user models.UserID) ([]models.UserID, error)
 	DialogSend(ctx context.Context, message models.DialogMessage) error
 	DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error)
 }
@@ -37,11 +40,24 @@ type Session interface {
 	TokenForUser(ctx context.Context, userID models.UserID) (string, error)
 }
 
+type EventPublisher interface {
+	PostAdd(post models.Post) error
+	FriendAdd(userID, friendID models.UserID) error
+	FriendDelete(userID, friendID models.UserID) error
+}
+
+type EventConsumer interface {
+	PostAdded(ctx context.Context, userID models.UserID, friends []models.UserID) (<-chan result.Result[models.Post], closer.Closer)
+	FriendUpdated(ctx context.Context, userID models.UserID) (<-chan result.Result[models.FriendEvent], closer.Closer)
+}
+
 type service struct {
-	master   Storage
-	replicas []Storage
-	cache    Cache
-	session  Session
+	master         Storage
+	replicas       []Storage
+	cache          Cache
+	session        Session
+	eventPublisher EventPublisher
+	eventConsumer  EventConsumer
 
 	replicaNum atomic.Int32
 }
@@ -51,12 +67,16 @@ func NewService(
 	replicas []Storage,
 	cache Cache,
 	session Session,
+	publisher EventPublisher,
+	consumer EventConsumer,
 ) *service {
 	return &service{
-		master:   master,
-		replicas: replicas,
-		cache:    cache,
-		session:  session,
+		master:         master,
+		replicas:       replicas,
+		cache:          cache,
+		session:        session,
+		eventPublisher: publisher,
+		eventConsumer:  consumer,
 	}
 }
 

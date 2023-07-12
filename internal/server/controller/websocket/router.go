@@ -6,28 +6,33 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"github.com/ghkadim/highload_architect/internal/controller"
 	"github.com/ghkadim/highload_architect/internal/logger"
+	"github.com/ghkadim/highload_architect/internal/server/controller"
 )
 
 type router struct {
 	routes []controller.Route
 }
 
-func NewRouter() *router {
-	return &router{}
+func NewRouter(controller *wsController) *router {
+	r := &router{}
+	r.AddRoute(
+		"postFeedPosted",
+		"/post/feed/posted",
+		true,
+		controller.PostFeedPosted)
+	return r
 }
 
 func (r *router) Routes() []controller.Route {
-	routes := make([]controller.Route, 0)
-	return routes
+	return r.routes
 }
 
 func (r *router) AddRoute(
 	name string,
 	pattern string,
 	authorize bool,
-	handler func(ctx context.Context, c *websocket.Conn),
+	handler func(ctx context.Context, r *http.Request, c *websocket.Conn) error,
 ) {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{})
@@ -36,7 +41,15 @@ func (r *router) AddRoute(
 			return
 		}
 		defer c.Close(websocket.StatusInternalError, "ws error")
-		handler(r.Context(), c)
+
+		err = handler(r.Context(), r, c)
+		if err != nil {
+			if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
+				return
+			}
+			logger.Error("Websocket failed: %v", err)
+		}
+		c.Close(websocket.StatusNormalClosure, "done")
 	}
 
 	r.routes = append(r.routes, controller.Route{
