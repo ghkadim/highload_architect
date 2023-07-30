@@ -3,16 +3,17 @@ package session
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/ghkadim/highload_architect/internal/models"
+	"time"
+
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
-	"time"
+
+	"github.com/ghkadim/highload_architect/internal/models"
 )
 
 var (
 	ErrTokenExpired = errors.New("token expired")
-	ErrBadUserId    = errors.New("bad user id")
+	ErrTokenInvalid = errors.New("token invalid")
 )
 
 type Session struct {
@@ -58,8 +59,8 @@ func (s *Session) ParseToken(ctx context.Context, tokenStr string) (models.UserI
 	if token != nil && token.Valid {
 		return models.UserID(claims.Subject), nil
 	} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
-		return "", ErrTokenExpired
+		return "", errors.Join(models.ErrUnauthorized, ErrTokenExpired)
 	} else {
-		return "", fmt.Errorf("invalid token: %w", err)
+		return "", errors.Join(models.ErrUnauthorized, ErrTokenInvalid, err)
 	}
 }

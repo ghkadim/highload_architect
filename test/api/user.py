@@ -58,3 +58,7 @@ class User:
     def api(self):
         return self._api
 
+    @property
+    def access_token(self):
+        return self._api.api_client.configuration.access_token
+

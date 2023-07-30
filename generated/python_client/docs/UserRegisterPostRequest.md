@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **first_name** | **str** |  | [optional] 
 **second_name** | **str** |  | [optional] 
 **age** | **int** |  | [optional] 
+**birthdate** | **date** | Дата рождения | [optional] 
 **biography** | **str** |  | [optional] 
 **city** | **str** |  | [optional] 
 **password** | **str** |  | [optional] 

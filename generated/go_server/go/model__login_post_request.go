@@ -11,6 +11,7 @@ package openapi
 
 type LoginPostRequest struct {
 
+	// Идентификатор пользователя
 	Id string `json:"id,omitempty"`
 
 	Password string `json:"password,omitempty"`

@@ -12,8 +12,13 @@ services:
       CACHE_ENABLED: 'true'
       DEBUG: 'false'
       CACHE_FEED_LIMIT: '1000'
+      ASYNCAPI_ENABLED: 'true'
+      RMQ_ADDRESS: 'rabbitmq:5672'
     depends_on:
-      - db
+      db:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     ports:
       - '8080:8080'
     expose:
@@ -34,5 +39,17 @@ services:
       - my-db:/var/lib/mysql
       - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ${PWD}/db/single/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    expose:
+      - '5672'
 volumes:
   my-db:

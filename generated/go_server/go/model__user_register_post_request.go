@@ -15,7 +15,11 @@ type UserRegisterPostRequest struct {
 
 	SecondName string `json:"second_name,omitempty"`
 
+	// Deprecated
 	Age int32 `json:"age,omitempty"`
+
+	// Дата рождения
+	Birthdate string `json:"birthdate,omitempty"`
 
 	Biography string `json:"biography,omitempty"`
 

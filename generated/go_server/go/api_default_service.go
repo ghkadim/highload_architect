@@ -188,7 +188,7 @@ func (s *DefaultApiService) PostDeleteIdPut(ctx context.Context, id string) (Imp
 }
 
 // PostFeedGet - 
-func (s *DefaultApiService) PostFeedGet(ctx context.Context, offset int32, limit int32) (ImplResponse, error) {
+func (s *DefaultApiService) PostFeedGet(ctx context.Context, offset float32, limit float32) (ImplResponse, error) {
 	// TODO - update PostFeedGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

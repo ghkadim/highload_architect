@@ -20,7 +20,7 @@ test:
 
 .PHONY: linter-install
 linter-install:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.52.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.53.3
 
 .PHONY: lint
 lint:
@@ -53,22 +53,21 @@ compose_clean:
 
 .PHONY: compose_test
 compose_test: compose_build
-	echo Test dialog sharding
-	docker-compose -f docker-compose_sharding.yml \
-		-f docker-compose_test.yml \
-		up -e TEST_BEFORE_RESHARDING=1 \
-		--abort-on-container-exit --exit-code-from test
-
-#	echo Test with cache enabled
-#	docker-compose -f docker-compose.yml \
+#	echo Test dialog sharding
+#	docker-compose -f docker-compose_sharding.yml \
 #		-f docker-compose_test.yml \
 #		up --abort-on-container-exit --exit-code-from test
 
-	echo Test with cache disabled
+	echo Test with cache enabled
 	docker-compose -f docker-compose.yml \
 		-f docker-compose_test.yml \
-		-f docker-compose_cache_disabled.yml \
 		up --abort-on-container-exit --exit-code-from test
+
+#	echo Test with cache disabled
+#	docker-compose -f docker-compose.yml \
+#		-f docker-compose_test.yml \
+#		-f docker-compose_cache_disabled.yml \
+#		up --abort-on-container-exit --exit-code-from test
 
 .PHONY: generate
 generate:

@@ -9,5 +9,6 @@ type User struct {
 	Age          *int32
 	Biography    *string
 	City         *string
+	Password     *string
 	PasswordHash []byte
 }
