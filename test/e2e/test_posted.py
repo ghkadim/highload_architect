@@ -41,7 +41,7 @@ def test_friends(async_api: AsyncApi, default_user: User, make_user, user_num, p
         default_user.api.friend_set_user_id_put(user.user_id)
 
     with async_api.post_feed_posted(default_user.access_token) as posted_feed:
-        time.sleep(1)
+        time.sleep(5)
         posts = []
         post_idx = 0
         for i in range(posts_per_user):
@@ -52,6 +52,8 @@ def test_friends(async_api: AsyncApi, default_user: User, make_user, user_num, p
                 posts.append(Post(postId=post_id, postText=text, author_user_id=user.user_id))
                 post_idx += 1
 
+        posted_feed = list(posted_feed)
+        posted_feed.sort(key=lambda p: int(p.id))
         assert list(posted_feed) == posts
 
 

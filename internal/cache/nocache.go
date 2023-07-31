@@ -2,22 +2,22 @@ package cache
 
 import "github.com/ghkadim/highload_architect/internal/models"
 
-type DisabledCache struct{}
+type disabledCache struct{}
 
-func NewDisabledCache() *DisabledCache {
-	return &DisabledCache{}
+func NewDisabledCache() Cache {
+	return &disabledCache{}
 }
 
-func (c *DisabledCache) FriendAdd(userID1, userID2 models.UserID) {}
+func (c *disabledCache) FriendAdd(userID1, userID2 models.UserID) {}
 
-func (c *DisabledCache) FriendDelete(userID1, userID2 models.UserID) {}
+func (c *disabledCache) FriendDelete(userID1, userID2 models.UserID) {}
 
-func (c *DisabledCache) PostAdd(post models.Post) {}
+func (c *disabledCache) PostAdd(post models.Post) {}
 
-func (c *DisabledCache) PostUpdate(postID models.PostID, text string) {}
+func (c *disabledCache) PostUpdate(postID models.PostID, text string) {}
 
-func (c *DisabledCache) PostDelete(postID models.PostID) {}
+func (c *disabledCache) PostDelete(postID models.PostID) {}
 
-func (c *DisabledCache) PostFeed(userID models.UserID, offset, limit int) ([]models.Post, error) {
+func (c *disabledCache) PostFeed(userID models.UserID, offset, limit int) ([]models.Post, error) {
 	return nil, models.ErrFeedNotFound
 }

@@ -28,7 +28,7 @@ lint:
 
 .PHONY: test_api
 test_api:
-	pytest -x -v test/api
+	pytest -x -v test/e2e
 
 .PHONY: clean
 clean:
@@ -53,21 +53,29 @@ compose_clean:
 
 .PHONY: compose_test
 compose_test: compose_build
-#	echo Test dialog sharding
-#	docker-compose -f docker-compose_sharding.yml \
-#		-f docker-compose_test.yml \
-#		up --abort-on-container-exit --exit-code-from test
-
-	echo Test with cache enabled
+	echo Test dialogs in tarantool
 	docker-compose -f docker-compose.yml \
 		-f docker-compose_test.yml \
 		up --abort-on-container-exit --exit-code-from test
 
-#	echo Test with cache disabled
-#	docker-compose -f docker-compose.yml \
-#		-f docker-compose_test.yml \
-#		-f docker-compose_cache_disabled.yml \
-#		up --abort-on-container-exit --exit-code-from test
+	echo Test dialogs in mysql
+	IN_MEMORY_DIALOG_ENABLED=false \
+	docker-compose -f docker-compose.yml \
+		-f docker-compose_test.yml \
+		up --abort-on-container-exit --exit-code-from test
+
+	echo Test dialogs sharding
+	IN_MEMORY_DIALOG_ENABLED=false \
+	docker-compose -f docker-compose.yml \
+		-f docker-compose_sharding.yml \
+		-f docker-compose_test.yml \
+		up --abort-on-container-exit --exit-code-from test
+
+	echo Test with cache disabled
+	CACHE_ENABLED=false \
+	docker-compose -f docker-compose.yml \
+		-f docker-compose_test.yml \
+		up --abort-on-container-exit --exit-code-from test
 
 .PHONY: generate
 generate:

@@ -1,4 +1,4 @@
-package service
+package post
 
 import (
 	"context"
@@ -15,8 +15,54 @@ import (
 	"github.com/ghkadim/highload_architect/internal/utils/closer"
 )
 
-func (s *service) PostAdd(ctx context.Context, text string, author models.UserID) (models.PostID, error) {
-	post, err := s.master.PostAdd(ctx, text, author)
+type storage interface {
+	PostAdd(ctx context.Context, text string, author models.UserID) (models.Post, error)
+	PostUpdate(ctx context.Context, postID models.PostID, text string) error
+	PostDelete(ctx context.Context, postID models.PostID) error
+	PostGet(ctx context.Context, postID models.PostID) (models.Post, error)
+	PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error)
+	UserFriends(ctx context.Context, user models.UserID) ([]models.UserID, error)
+}
+
+type cache interface {
+	PostAdd(post models.Post)
+	PostUpdate(postID models.PostID, text string)
+	PostDelete(postID models.PostID)
+	PostFeed(userID models.UserID, offset, limit int) ([]models.Post, error)
+}
+
+type eventPublisher interface {
+	PostAdd(post models.Post) error
+}
+
+type eventConsumer interface {
+	PostAdded(ctx context.Context, userID models.UserID, friends []models.UserID) (<-chan result.Result[models.Post], closer.Closer)
+	FriendUpdated(ctx context.Context, userID models.UserID) (<-chan result.Result[models.FriendEvent], closer.Closer)
+}
+
+type Service struct {
+	storage        storage
+	cache          cache
+	eventPublisher eventPublisher
+	eventConsumer  eventConsumer
+}
+
+func NewService(
+	master storage,
+	cache cache,
+	publisher eventPublisher,
+	consumer eventConsumer,
+) *Service {
+	return &Service{
+		storage:        master,
+		cache:          cache,
+		eventPublisher: publisher,
+		eventConsumer:  consumer,
+	}
+}
+
+func (s *Service) PostAdd(ctx context.Context, text string, author models.UserID) (models.PostID, error) {
+	post, err := s.storage.PostAdd(ctx, text, author)
 	if err != nil {
 		return "", err
 	}
@@ -29,8 +75,8 @@ func (s *service) PostAdd(ctx context.Context, text string, author models.UserID
 	return post.ID, nil
 }
 
-func (s *service) PostDelete(ctx context.Context, userID models.UserID, postID models.PostID) error {
-	post, err := s.master.PostGet(ctx, postID)
+func (s *Service) PostDelete(ctx context.Context, userID models.UserID, postID models.PostID) error {
+	post, err := s.storage.PostGet(ctx, postID)
 	if err != nil {
 		if errors.Is(err, models.ErrPostNotFound) {
 			logger.Error("Post already deleted: %v", err)
@@ -42,7 +88,7 @@ func (s *service) PostDelete(ctx context.Context, userID models.UserID, postID m
 		return errors.Join(models.ErrUnauthorized, errors.New("post deletion forbidden for user"))
 	}
 
-	err = s.master.PostDelete(ctx, postID)
+	err = s.storage.PostDelete(ctx, postID)
 	if err != nil {
 		return err
 	}
@@ -51,7 +97,7 @@ func (s *service) PostDelete(ctx context.Context, userID models.UserID, postID m
 	return nil
 }
 
-func (s *service) PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error) {
+func (s *Service) PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error) {
 	cached := true
 	posts, err := s.cache.PostFeed(userID, offset, limit)
 	if err != nil {
@@ -65,7 +111,7 @@ func (s *service) PostFeed(ctx context.Context, userID models.UserID, offset, li
 		dbOffset := offset + len(posts)
 		dbLimit := limit - len(posts)
 
-		dbPosts, err := s.readStorage().PostFeed(ctx, userID, dbOffset, dbLimit)
+		dbPosts, err := s.storage.PostFeed(ctx, userID, dbOffset, dbLimit)
 		if err != nil {
 			return nil, err
 		}
@@ -75,16 +121,16 @@ func (s *service) PostFeed(ctx context.Context, userID models.UserID, offset, li
 	return posts, nil
 }
 
-func (s *service) PostGet(ctx context.Context, postID models.PostID) (models.Post, error) {
-	post, err := s.readStorage().PostGet(ctx, postID)
+func (s *Service) PostGet(ctx context.Context, postID models.PostID) (models.Post, error) {
+	post, err := s.storage.PostGet(ctx, postID)
 	if err != nil {
 		return models.Post{}, err
 	}
 	return post, nil
 }
 
-func (s *service) PostUpdate(ctx context.Context, userID models.UserID, postID models.PostID, text string) error {
-	post, err := s.master.PostGet(ctx, postID)
+func (s *Service) PostUpdate(ctx context.Context, userID models.UserID, postID models.PostID, text string) error {
+	post, err := s.storage.PostGet(ctx, postID)
 	if err != nil {
 		return err
 	}
@@ -93,7 +139,7 @@ func (s *service) PostUpdate(ctx context.Context, userID models.UserID, postID m
 		return errors.Join(models.ErrUnauthorized, errors.New("post update forbidden for user"))
 	}
 
-	err = s.master.PostUpdate(ctx, postID, text)
+	err = s.storage.PostUpdate(ctx, postID, text)
 	if err != nil {
 		return err
 	}
@@ -101,7 +147,7 @@ func (s *service) PostUpdate(ctx context.Context, userID models.UserID, postID m
 	return nil
 }
 
-func (s *service) PostFeedPosted(ctx context.Context, subscriber models.UserID) <-chan result.Result[models.Post] {
+func (s *Service) PostFeedPosted(ctx context.Context, subscriber models.UserID) <-chan result.Result[models.Post] {
 	resultCh := make(chan result.Result[models.Post])
 	errorCh := make(chan error, 2)
 	syncFriendsCh := make(chan []models.UserID)
@@ -161,7 +207,7 @@ func (s *service) PostFeedPosted(ctx context.Context, subscriber models.UserID) 
 			case <-ticker.C:
 				if syncFriendsRequired.Swap(false) {
 					logger.Debug("Syncing friends for user=%s", subscriber)
-					friends, err := s.readStorage().UserFriends(ctx, subscriber)
+					friends, err := s.storage.UserFriends(ctx, subscriber)
 					if err != nil {
 						errorCh <- fmt.Errorf("failed to listen friend updates: %w", err)
 						close(syncFriendsCh)

@@ -98,7 +98,7 @@ func TestCache_FeedCreate(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			c := NewCache(1000, nil)
+			c := NewCache(1000, nil).(*cache)
 			fullFeed := up.makeFeed(test.friends...)
 
 			testFeedCreated(t, c, u, test.friends, fullFeed, test.offset, test.limit)
@@ -138,7 +138,7 @@ func TestCache_PostAdd(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			up := up.copy()
-			c := NewCache(1000, nil)
+			c := NewCache(1000, nil).(*cache)
 			fullFeed := up.makeFeed(test.friends...)
 
 			testFeedCreated(t, c, u, test.friends, fullFeed, offset, limit)
@@ -182,7 +182,7 @@ func TestCache_PostUpdate(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			up := up.copy()
-			c := NewCache(1000, nil)
+			c := NewCache(1000, nil).(*cache)
 			fullFeed := up.makeFeed(test.friends...)
 			require.Len(t, fullFeed, 10)
 
@@ -231,7 +231,7 @@ func TestCache_PostDelete(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			up := up.copy()
-			c := NewCache(1000, nil)
+			c := NewCache(1000, nil).(*cache)
 			fullFeed := up.makeFeed(test.friends...)
 			require.Len(t, fullFeed, 10)
 
@@ -294,7 +294,7 @@ func TestCache_FriendDelete(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			up := up.copy()
 			ds := mocks.NewDataSource(t)
-			c := NewCache(1000, ds)
+			c := NewCache(1000, ds).(*cache)
 			fullFeed := up.makeFeed(test.friends...)
 
 			testFeedCreated(t, c, u, test.friends, fullFeed, offset, limit)
@@ -363,7 +363,7 @@ func TestCache_FriendAdd(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			up := up.copy()
 			ds := mocks.NewDataSource(t)
-			c := NewCache(1000, ds)
+			c := NewCache(1000, ds).(*cache)
 			fullFeed := up.makeFeed(test.friends...)
 
 			testFeedCreated(t, c, u, test.friends, fullFeed, offset, limit)
@@ -384,7 +384,7 @@ func TestCache_FriendAdd(t *testing.T) {
 
 func testFeedCreated(
 	t *testing.T,
-	c *Cache,
+	c *cache,
 	u models.User,
 	friends friends,
 	fullFeed []models.Post,
