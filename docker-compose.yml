@@ -9,16 +9,20 @@ services:
       DB_USER: 'user'
       DB_PASSWORD: 'password'
       DB_ADDRESS: 'db:3306'
-      CACHE_ENABLED: 'true'
+      CACHE_ENABLED: ${CACHE_ENABLED:-true}
       DEBUG: 'false'
       CACHE_FEED_LIMIT: '1000'
       ASYNCAPI_ENABLED: 'true'
       RMQ_ADDRESS: 'rabbitmq:5672'
+      IN_MEMORY_DIALOG_ENABLED: ${IN_MEMORY_DIALOG_ENABLED:-true}
+      TARANTOOL_ADDRESS: 'http://tarantool:3380'
     depends_on:
       db:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+      tarantool:
+        condition: service_started
     ports:
       - '8080:8080'
     expose:
@@ -51,5 +55,16 @@ services:
       retries: 3
     expose:
       - '5672'
+  tarantool:
+    image: tarantool/tarantool:2.3.1
+    command: tarantool /opt/tarantool/app.lua
+    ports:
+      - '3380:3380'
+    expose:
+      - '3380'
+    volumes:
+      - tarantool-db:/var/lib/tarantool
+      - ${PWD}/tarantool/src:/opt/tarantool
 volumes:
   my-db:
+  tarantool-db:

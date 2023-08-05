@@ -8,7 +8,16 @@ import (
 	"github.com/ghkadim/highload_architect/internal/models"
 )
 
-type Cache struct {
+type Cache interface {
+	FriendAdd(userID1, userID2 models.UserID)
+	FriendDelete(userID1, userID2 models.UserID)
+	PostAdd(post models.Post)
+	PostUpdate(postID models.PostID, text string)
+	PostDelete(postID models.PostID)
+	PostFeed(userID models.UserID, offset, limit int) ([]models.Post, error)
+}
+
+type cache struct {
 	sync.RWMutex
 	dataSource    DataSource
 	feeds         *feedsCache
@@ -16,8 +25,8 @@ type Cache struct {
 	feedLimitSize int
 }
 
-func NewCache(feedLimit int, dataSource DataSource) *Cache {
-	c := &Cache{
+func NewCache(feedLimit int, dataSource DataSource) Cache {
+	c := &cache{
 		feeds:         newFeedsCache(feedLimit),
 		subscribers:   map[models.UserID]map[models.UserID]struct{}{},
 		feedLimitSize: feedLimit,
@@ -26,7 +35,7 @@ func NewCache(feedLimit int, dataSource DataSource) *Cache {
 	return c
 }
 
-func (c *Cache) FriendAdd(userID1, userID2 models.UserID) {
+func (c *cache) FriendAdd(userID1, userID2 models.UserID) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -52,7 +61,7 @@ func (c *Cache) FriendAdd(userID1, userID2 models.UserID) {
 	}()
 }
 
-func (c *Cache) FriendDelete(userID1, userID2 models.UserID) {
+func (c *cache) FriendDelete(userID1, userID2 models.UserID) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -76,7 +85,7 @@ func (c *Cache) FriendDelete(userID1, userID2 models.UserID) {
 	}()
 }
 
-func (c *Cache) PostAdd(post models.Post) {
+func (c *cache) PostAdd(post models.Post) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -85,13 +94,13 @@ func (c *Cache) PostAdd(post models.Post) {
 	}
 }
 
-func (c *Cache) PostUpdate(postID models.PostID, text string) {
+func (c *cache) PostUpdate(postID models.PostID, text string) {
 	c.Lock()
 	defer c.Unlock()
 	c.feeds.PostUpdate(postID, text)
 }
 
-func (c *Cache) PostDelete(postID models.PostID) {
+func (c *cache) PostDelete(postID models.PostID) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -104,7 +113,7 @@ func (c *Cache) PostDelete(postID models.PostID) {
 	}
 }
 
-func (c *Cache) PostFeed(userID models.UserID, offset, limit int) ([]models.Post, error) {
+func (c *cache) PostFeed(userID models.UserID, offset, limit int) ([]models.Post, error) {
 	c.RLock()
 	defer c.RUnlock()
 	posts, ok := c.feeds.Feed(userID)
@@ -145,11 +154,11 @@ func (c *Cache) PostFeed(userID models.UserID, offset, limit int) ([]models.Post
 	return posts[offset : offset+limit], nil
 }
 
-func (c *Cache) feedLimit() int {
+func (c *cache) feedLimit() int {
 	return c.feedLimitSize
 }
 
-func (c *Cache) feedPostAdd(userID models.UserID, post models.Post) {
+func (c *cache) feedPostAdd(userID models.UserID, post models.Post) {
 	go func() {
 		c.Lock()
 		defer c.Unlock()
@@ -157,13 +166,13 @@ func (c *Cache) feedPostAdd(userID models.UserID, post models.Post) {
 	}()
 }
 
-func (c *Cache) feedInit(userID models.UserID) {
+func (c *cache) feedInit(userID models.UserID) {
 	c.Lock()
 	defer c.Unlock()
 	c.feeds.FeedAdd(userID)
 }
 
-func (c *Cache) friendsAdd(userID models.UserID, friendIDs []models.UserID) {
+func (c *cache) friendsAdd(userID models.UserID, friendIDs []models.UserID) {
 	c.Lock()
 	defer c.Unlock()
 	for _, friend := range friendIDs {

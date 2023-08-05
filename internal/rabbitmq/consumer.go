@@ -14,7 +14,12 @@ import (
 	"github.com/ghkadim/highload_architect/internal/utils/closer"
 )
 
-type Consumer struct {
+type Consumer interface {
+	PostAdded(ctx context.Context, userID models.UserID, friends []models.UserID) (<-chan result.Result[models.Post], closer.Closer)
+	FriendUpdated(ctx context.Context, userID models.UserID) (<-chan result.Result[models.FriendEvent], closer.Closer)
+}
+
+type consumer struct {
 	queueLen             int
 	postAddedConsumer    *queueConsumer[post]
 	friendUpdateConsumer *queueConsumer[friendUpdate]
@@ -26,7 +31,7 @@ func NewConsumer(
 	Hostname string,
 	QueueLen int,
 ) (
-	*Consumer,
+	Consumer,
 	error,
 ) {
 	conn, err := rabbitmq.NewConn(
@@ -36,7 +41,7 @@ func NewConsumer(
 	if err != nil {
 		return nil, err
 	}
-	return &Consumer{
+	return &consumer{
 		queueLen: QueueLen,
 		postAddedConsumer: newRmqQueueConsumer[post](
 			conn,
@@ -51,7 +56,7 @@ func NewConsumer(
 	}, nil
 }
 
-func (c *Consumer) PostAdded(ctx context.Context, userID models.UserID, friends []models.UserID) (<-chan result.Result[models.Post], closer.Closer) {
+func (c *consumer) PostAdded(ctx context.Context, userID models.UserID, friends []models.UserID) (<-chan result.Result[models.Post], closer.Closer) {
 	logger.Debug("Consumer.PostAdded: new subscriberId=%s for authorId=%s", userID, friends)
 	dataCh := make(chan result.Result[post], c.queueLen)
 	closers := make([]closer.Closer, 0, len(friends))
@@ -113,7 +118,7 @@ func (c *Consumer) PostAdded(ctx context.Context, userID models.UserID, friends 
 	return resCh, clsr
 }
 
-func (c *Consumer) FriendUpdated(ctx context.Context, userID models.UserID) (<-chan result.Result[models.FriendEvent], closer.Closer) {
+func (c *consumer) FriendUpdated(ctx context.Context, userID models.UserID) (<-chan result.Result[models.FriendEvent], closer.Closer) {
 	logger.Debug("Consumer.FriendUpdated: subscribe userID=%s", userID)
 	dataCh := make(chan result.Result[friendUpdate], c.queueLen)
 
@@ -162,4 +167,8 @@ func (c *Consumer) FriendUpdated(ctx context.Context, userID models.UserID) (<-c
 	}()
 
 	return resCh, clsr
+}
+
+func NewNopConsumer() Consumer {
+	return nil
 }

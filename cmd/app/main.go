@@ -15,8 +15,12 @@ import (
 	"github.com/ghkadim/highload_architect/internal/server"
 	"github.com/ghkadim/highload_architect/internal/server/controller/openapi"
 	"github.com/ghkadim/highload_architect/internal/server/controller/websocket"
-	"github.com/ghkadim/highload_architect/internal/service"
+	"github.com/ghkadim/highload_architect/internal/service/dialog"
+	"github.com/ghkadim/highload_architect/internal/service/friend"
+	"github.com/ghkadim/highload_architect/internal/service/post"
+	"github.com/ghkadim/highload_architect/internal/service/user"
 	"github.com/ghkadim/highload_architect/internal/session"
+	"github.com/ghkadim/highload_architect/internal/tarantool"
 )
 
 func main() {
@@ -25,7 +29,7 @@ func main() {
 
 	logger.Info("Server starting")
 
-	master, err := mysql.NewStorage(
+	storage, err := mysql.NewStorage(
 		getenv("DB_USER", "user"),
 		getenv("DB_PASSWORD", "password"),
 		getenv("DB_ADDRESS", "127.0.0.1:3306"),
@@ -33,15 +37,15 @@ func main() {
 		getenv("DB_DEDICATED_SHARDS", make(mysql.DedicatedShardID)),
 	)
 	if err != nil {
-		log.Fatal("failed to init db")
+		logger.Fatal("failed to init db")
 	}
 
-	slaves := make([]service.Storage, 0)
+	replicas := make([]mysql.Storage, 0)
 	for _, address := range strings.Split(getenv("DB_REPLICA_ADDRESSES", ""), ",") {
 		if address == "" {
 			continue
 		}
-		slave, err := mysql.NewStorage(
+		replica, err := mysql.NewStorage(
 			getenv("DB_USER", "user"),
 			getenv("DB_PASSWORD", "password"),
 			address,
@@ -49,17 +53,21 @@ func main() {
 			getenv("DB_DEDICATED_SHARDS", make(mysql.DedicatedShardID)),
 		)
 		if err != nil {
-			log.Fatal("failed to init slave db")
+			logger.Fatal("failed to init slave db")
 		}
 
-		slaves = append(slaves, slave)
+		replicas = append(replicas, replica)
 	}
 
-	var cache_ service.Cache
+	if len(replicas) > 0 {
+		storage = mysql.NewStorageWithReplicas(storage, replicas)
+	}
+
+	var cache_ cache.Cache
 	if getenv("CACHE_ENABLED", true) {
 		cache_ = cache.NewCache(
 			getenv("CACHE_FEED_LIMIT", 1000),
-			cache.NewLoadWithRetry(master))
+			cache.NewLoadWithRetry(storage))
 		logger.Info("Feed cache enabled")
 	} else {
 		cache_ = cache.NewDisabledCache()
@@ -70,33 +78,53 @@ func main() {
 		getenv("SESSION_KEY", "secret"),
 	)
 
-	eventConsumer, err := rabbitmq.NewConsumer(
-		getenv("RMQ_USER", "guest"),
-		getenv("RMQ_PASSWORD", "guest"),
-		getenv("RMQ_ADDRESS", "localhost:5672"),
-		getenv("EVENT_CONSUMER_QUEUE_LEN", 1000),
-	)
-	if err != nil {
-		logger.Fatal("Failed to create event consumer: %v", err)
+	var eventConsumer rabbitmq.Consumer
+	var eventPublisher rabbitmq.Publisher
+
+	if getenv("ASYNCAPI_ENABLED", true) {
+		eventConsumer, err = rabbitmq.NewConsumer(
+			getenv("RMQ_USER", "guest"),
+			getenv("RMQ_PASSWORD", "guest"),
+			getenv("RMQ_ADDRESS", "localhost:5672"),
+			getenv("EVENT_CONSUMER_QUEUE_LEN", 1000),
+		)
+		if err != nil {
+			logger.Fatal("Failed to create event consumer: %v", err)
+		}
+
+		eventPublisher, err = rabbitmq.NewPublisher(
+			getenv("RMQ_USER", "guest"),
+			getenv("RMQ_PASSWORD", "guest"),
+			getenv("RMQ_ADDRESS", "localhost:5672"),
+		)
+		if err != nil {
+			logger.Fatal("Failed to create event publisher: %v", err)
+		}
+	} else {
+		eventConsumer = rabbitmq.NewNopConsumer()
+		eventPublisher = rabbitmq.NewNopPublisher()
 	}
 
-	eventPublisher, err := rabbitmq.NewPublisher(
-		getenv("RMQ_USER", "guest"),
-		getenv("RMQ_PASSWORD", "guest"),
-		getenv("RMQ_ADDRESS", "localhost:5672"),
-	)
-	if err != nil {
-		logger.Fatal("Failed to create event publisher: %v", err)
+	var dialogSvc *dialog.Service
+	if getenv("IN_MEMORY_DIALOG_ENABLED", true) {
+		logger.Info("In memory dialogs enabled")
+		dialogSvc = dialog.NewService(
+			tarantool.NewStorage(
+				getenv("TARANTOOL_ADDRESS", ""),
+				http.Client{},
+			),
+		)
+	} else {
+		logger.Info("In memory dialogs disabled")
+		dialogSvc = dialog.NewService(storage)
 	}
 
-	apiService := service.NewService(
-		master,
-		slaves,
-		cache_,
-		session_,
-		eventPublisher,
-		eventConsumer,
-	)
+	apiService := &svc{
+		userService:   user.NewService(storage, session_),
+		friendService: friend.NewService(storage, cache_, eventPublisher),
+		postService:   post.NewService(storage, cache_, eventPublisher, eventConsumer),
+		dialogService: dialogSvc,
+	}
 
 	routers := []server.Router{
 		openapi.NewRouter(
@@ -112,6 +140,18 @@ func main() {
 	apiController := server.NewServer(routers...)
 
 	log.Fatal(http.ListenAndServe(":8080", apiController))
+}
+
+type userService = user.Service
+type friendService = friend.Service
+type postService = post.Service
+type dialogService = dialog.Service
+
+type svc struct {
+	*userService
+	*friendService
+	*postService
+	*dialogService
 }
 
 func getenv[T any](variable string, defaultValue T) T {

@@ -1,5 +1,3 @@
-import time
-
 import pytest
 import os
 import openapi_client

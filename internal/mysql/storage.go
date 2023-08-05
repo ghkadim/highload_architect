@@ -17,7 +17,28 @@ import (
 
 type DedicatedShardID map[models.UserID]string
 
-type Storage struct {
+type Storage interface {
+	UserRegister(ctx context.Context, user models.User) (models.UserID, error)
+	UserGet(ctx context.Context, id models.UserID) (models.User, error)
+	UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error)
+	FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error
+	FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error
+	PostAdd(ctx context.Context, text string, author models.UserID) (models.Post, error)
+	PostUpdate(ctx context.Context, postID models.PostID, text string) error
+	PostDelete(ctx context.Context, postID models.PostID) error
+	PostGet(ctx context.Context, postID models.PostID) (models.Post, error)
+	PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error)
+	UserPosts(ctx context.Context, user models.UserID, limit int) ([]models.Post, error)
+	UserFriends(ctx context.Context, user models.UserID) ([]models.UserID, error)
+	DialogSend(ctx context.Context, message models.DialogMessage) error
+	DialogBulkInsert(ctx context.Context, messages []models.DialogMessage) error
+	DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error)
+	DialogMatchingShard(ctx context.Context, matchExpr string, fromID models.DialogMessageID, limit int64) ([]models.DialogMessage, error)
+	DialogsNotMatchingShardDelete(ctx context.Context, matchExpr string) (int64, error)
+	DialogsDelete(ctx context.Context, ids []models.DialogMessageID) error
+}
+
+type storage struct {
 	db                 *sql.DB
 	dedicatedShards    DedicatedShardID
 	dialogsIDGenerator *snowflake.Node
@@ -29,7 +50,7 @@ func NewStorage(
 	address string,
 	database string,
 	dedicatedShards DedicatedShardID,
-) (*Storage, error) {
+) (Storage, error) {
 	cfg := mysql.Config{
 		User:                 user,
 		Passwd:               password,
@@ -49,7 +70,7 @@ func NewStorage(
 		return nil, err
 	}
 
-	return &Storage{
+	return &storage{
 		db:                 db,
 		dedicatedShards:    dedicatedShards,
 		dialogsIDGenerator: dialogsIDGenerator,
@@ -60,7 +81,7 @@ func toUserID(id int64) models.UserID {
 	return models.UserID(strconv.FormatInt(id, 10))
 }
 
-func (s *Storage) UserRegister(ctx context.Context, user models.User) (models.UserID, error) {
+func (s *storage) UserRegister(ctx context.Context, user models.User) (models.UserID, error) {
 	result, err := s.db.ExecContext(ctx,
 		"INSERT INTO users (first_name, second_name, age, biography, city, password_hash) VALUES (?, ?, ?, ?, ?, ?)",
 		user.FirstName, user.SecondName, user.Age, user.Biography, user.City, user.PasswordHash)
@@ -75,7 +96,7 @@ func (s *Storage) UserRegister(ctx context.Context, user models.User) (models.Us
 	return toUserID(id), nil
 }
 
-func (s *Storage) UserGet(ctx context.Context, id models.UserID) (models.User, error) {
+func (s *storage) UserGet(ctx context.Context, id models.UserID) (models.User, error) {
 	row := s.db.QueryRowContext(ctx,
 		"SELECT first_name, second_name, age, biography, city, password_hash FROM users WHERE id = ?", id)
 	user := models.User{ID: id}
@@ -89,7 +110,7 @@ func (s *Storage) UserGet(ctx context.Context, id models.UserID) (models.User, e
 	return user, nil
 }
 
-func (s *Storage) UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error) {
+func (s *storage) UserSearch(ctx context.Context, firstName, secondName string) ([]models.User, error) {
 	rows, err := s.db.QueryContext(ctx,
 		"SELECT id, first_name, second_name, age, biography, city FROM users "+
 			"WHERE first_name LIKE ? AND second_name LIKE ?", firstName+"%", secondName+"%")
@@ -115,7 +136,7 @@ func (s *Storage) UserSearch(ctx context.Context, firstName, secondName string) 
 	return users, nil
 }
 
-func (s *Storage) FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error {
+func (s *storage) FriendAdd(ctx context.Context, userID1, userID2 models.UserID) error {
 	_, err := s.db.ExecContext(ctx,
 		"INSERT INTO friends (user1_id, user2_id) VALUES (?, ?)",
 		userID1, userID2)
@@ -125,7 +146,7 @@ func (s *Storage) FriendAdd(ctx context.Context, userID1, userID2 models.UserID)
 	return nil
 }
 
-func (s *Storage) FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error {
+func (s *storage) FriendDelete(ctx context.Context, userID1, userID2 models.UserID) error {
 	_, err := s.db.ExecContext(ctx,
 		"DELETE FROM friends WHERE (user1_id, user2_id) = (?, ?)",
 		userID1, userID2)
@@ -139,7 +160,7 @@ func toPostID(id int64) models.PostID {
 	return models.PostID(strconv.FormatInt(id, 10))
 }
 
-func (s *Storage) PostAdd(ctx context.Context, text string, author models.UserID) (models.Post, error) {
+func (s *storage) PostAdd(ctx context.Context, text string, author models.UserID) (models.Post, error) {
 	result, err := s.db.ExecContext(ctx,
 		"INSERT INTO posts (text, user_id) VALUES (?, ?)", text, author)
 	if err != nil {
@@ -153,7 +174,7 @@ func (s *Storage) PostAdd(ctx context.Context, text string, author models.UserID
 	return models.Post{ID: toPostID(id), SequentialID: id, Text: text, AuthorID: author}, nil
 }
 
-func (s *Storage) PostUpdate(ctx context.Context, postID models.PostID, text string) error {
+func (s *storage) PostUpdate(ctx context.Context, postID models.PostID, text string) error {
 	_, err := s.db.ExecContext(ctx,
 		"UPDATE posts SET text = ? WHERE id = ?", text, postID)
 	if err != nil {
@@ -162,7 +183,7 @@ func (s *Storage) PostUpdate(ctx context.Context, postID models.PostID, text str
 	return nil
 }
 
-func (s *Storage) PostDelete(ctx context.Context, postID models.PostID) error {
+func (s *storage) PostDelete(ctx context.Context, postID models.PostID) error {
 	_, err := s.db.ExecContext(ctx,
 		"DELETE FROM posts WHERE id = ?", postID)
 	if err != nil {
@@ -171,7 +192,7 @@ func (s *Storage) PostDelete(ctx context.Context, postID models.PostID) error {
 	return nil
 }
 
-func (s *Storage) PostGet(ctx context.Context, postID models.PostID) (models.Post, error) {
+func (s *storage) PostGet(ctx context.Context, postID models.PostID) (models.Post, error) {
 	row := s.db.QueryRowContext(ctx,
 		"SELECT id, text, user_id FROM posts WHERE id = ?", postID)
 	post := models.Post{ID: postID}
@@ -186,7 +207,7 @@ func (s *Storage) PostGet(ctx context.Context, postID models.PostID) (models.Pos
 	return post, nil
 }
 
-func (s *Storage) PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error) {
+func (s *storage) PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error) {
 	rows, err := s.db.QueryContext(ctx,
 		"SELECT id, text, user_id FROM posts "+
 			"WHERE user_id IN ("+
@@ -216,7 +237,7 @@ func (s *Storage) PostFeed(ctx context.Context, userID models.UserID, offset, li
 	return posts, nil
 }
 
-func (s *Storage) UserPosts(ctx context.Context, user models.UserID, limit int) ([]models.Post, error) {
+func (s *storage) UserPosts(ctx context.Context, user models.UserID, limit int) ([]models.Post, error) {
 	rows, err := s.db.QueryContext(ctx,
 		"SELECT id, text FROM posts "+
 			"WHERE user_id = ? "+
@@ -242,7 +263,7 @@ func (s *Storage) UserPosts(ctx context.Context, user models.UserID, limit int) 
 	return posts, nil
 }
 
-func (s *Storage) UserFriends(ctx context.Context, user models.UserID) ([]models.UserID, error) {
+func (s *storage) UserFriends(ctx context.Context, user models.UserID) ([]models.UserID, error) {
 	rows, err := s.db.QueryContext(ctx,
 		"SELECT user2_id FROM friends WHERE user1_id = ?", user)
 	if err != nil {
@@ -274,7 +295,7 @@ func orderUserID(userID1, userID2 models.UserID) (models.UserID, models.UserID) 
 
 const dialogMessageShardingIDDivider = 1e3
 
-func (s *Storage) dialogMessageShardingID(userID1, userID2 models.UserID) string {
+func (s *storage) dialogMessageShardingID(userID1, userID2 models.UserID) string {
 	userID1, userID2 = orderUserID(userID1, userID2)
 
 	if id, ok := s.dedicatedShards[userID1]; ok {
@@ -294,7 +315,7 @@ func shardRoute(query string, shardingID string) string {
 	return fmt.Sprintf("/* sharding_id=%s */ %s", shardingID, query)
 }
 
-func (s *Storage) DialogSend(ctx context.Context, message models.DialogMessage) error {
+func (s *storage) DialogSend(ctx context.Context, message models.DialogMessage) error {
 	shardingID := s.dialogMessageShardingID(message.From, message.To)
 	if message.ID == 0 {
 		message.ID = models.DialogMessageID(s.dialogsIDGenerator.Generate())
@@ -309,7 +330,7 @@ func (s *Storage) DialogSend(ctx context.Context, message models.DialogMessage) 
 	return nil
 }
 
-func (s *Storage) DialogBulkInsert(ctx context.Context, messages []models.DialogMessage) error {
+func (s *storage) DialogBulkInsert(ctx context.Context, messages []models.DialogMessage) error {
 	stmt := "INSERT INTO dialogs (id, from_user_id, to_user_id, text, sharding_id) VALUES "
 	binds := make([]any, 0, len(messages)*5)
 	for i, message := range messages {
@@ -327,7 +348,7 @@ func (s *Storage) DialogBulkInsert(ctx context.Context, messages []models.Dialog
 	return nil
 }
 
-func (s *Storage) DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error) {
+func (s *storage) DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error) {
 	shardingID := s.dialogMessageShardingID(userID1, userID2)
 	rows, err := s.db.QueryContext(ctx,
 		shardRoute("SELECT from_user_id, to_user_id, text FROM dialogs "+
@@ -357,7 +378,7 @@ func (s *Storage) DialogList(ctx context.Context, userID1, userID2 models.UserID
 	return messages, nil
 }
 
-func (s *Storage) DialogMatchingShard(ctx context.Context, matchExpr string, fromID models.DialogMessageID, limit int64) ([]models.DialogMessage, error) {
+func (s *storage) DialogMatchingShard(ctx context.Context, matchExpr string, fromID models.DialogMessageID, limit int64) ([]models.DialogMessage, error) {
 	rows, err := s.db.QueryContext(ctx,
 		"SELECT id, from_user_id, to_user_id, text FROM dialogs "+
 			"WHERE sharding_id REGEXP ? AND id > ? ORDER BY id ASC LIMIT ?", matchExpr, fromID, limit)
@@ -385,7 +406,7 @@ func (s *Storage) DialogMatchingShard(ctx context.Context, matchExpr string, fro
 	return messages, nil
 }
 
-func (s *Storage) DialogsNotMatchingShardDelete(ctx context.Context, matchExpr string) (int64, error) {
+func (s *storage) DialogsNotMatchingShardDelete(ctx context.Context, matchExpr string) (int64, error) {
 	res, err := s.db.ExecContext(ctx, "DELETE FROM dialogs WHERE sharding_id NOT REGEXP ?", matchExpr)
 	if err != nil {
 		return 0, fmt.Errorf("DialogsNotMatchingShardDelete exec: %v", err)
@@ -397,7 +418,7 @@ func (s *Storage) DialogsNotMatchingShardDelete(ctx context.Context, matchExpr s
 	return affected, nil
 }
 
-func (s *Storage) DialogsDelete(ctx context.Context, ids []models.DialogMessageID) error {
+func (s *storage) DialogsDelete(ctx context.Context, ids []models.DialogMessageID) error {
 	stmt := "DELETE FROM dialogs WHERE id IN ("
 	binds := make([]any, 0, len(ids))
 	for i, id := range ids {
