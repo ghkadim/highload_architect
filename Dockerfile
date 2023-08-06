@@ -8,7 +8,7 @@ RUN go get -d -v ./...
 RUN make build
 
 FROM scratch AS runtime
-ARG application=app
-COPY --from=build /src/bin/$application ./app
+ARG APPLICATION=app
+COPY --from=build /src/bin/$APPLICATION ./app
 EXPOSE 8080/tcp
 ENTRYPOINT ["./app"]

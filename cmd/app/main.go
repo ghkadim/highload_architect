@@ -103,18 +103,22 @@ func main() {
 		eventPublisher = rabbitmq.NewNopPublisher()
 	}
 
-	var dialogSvc *dialog.Service
-	if config.Get("IN_MEMORY_DIALOG_ENABLED", true) {
-		logger.Info("In memory dialogs enabled")
-		dialogSvc = dialog.NewService(
-			tarantool.NewStorage(
-				config.Get("TARANTOOL_ADDRESS", ""),
-				http.Client{},
-			),
-		)
+	var dialogSvc dialog.Service
+	if config.Get("DIALOG_MICROSERVICE_ENABLED", false) {
+		dialogSvc = dialog.NewProxyService(config.Get("DIALOG_ADDRESS", "dialog:8080"))
 	} else {
-		logger.Info("In memory dialogs disabled")
-		dialogSvc = dialog.NewService(storage)
+		if config.Get("IN_MEMORY_DIALOG_ENABLED", true) {
+			logger.Info("In memory dialogs enabled")
+			dialogSvc = dialog.NewService(
+				tarantool.NewStorage(
+					config.Get("TARANTOOL_ADDRESS", ""),
+					http.Client{},
+				),
+			)
+		} else {
+			logger.Info("In memory dialogs disabled")
+			dialogSvc = dialog.NewService(storage)
+		}
 	}
 
 	apiService := &svc{
@@ -140,14 +144,14 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", apiController))
 }
 
-type userService = user.Service
-type friendService = friend.Service
-type postService = post.Service
+type userService = *user.Service
+type friendService = *friend.Service
+type postService = *post.Service
 type dialogService = dialog.Service
 
 type svc struct {
-	*userService
-	*friendService
-	*postService
-	*dialogService
+	userService
+	friendService
+	postService
+	dialogService
 }

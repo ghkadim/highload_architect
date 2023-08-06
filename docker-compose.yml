@@ -14,19 +14,33 @@ services:
       CACHE_FEED_LIMIT: '1000'
       ASYNCAPI_ENABLED: 'true'
       RMQ_ADDRESS: 'rabbitmq:5672'
-      IN_MEMORY_DIALOG_ENABLED: ${IN_MEMORY_DIALOG_ENABLED:-true}
-      TARANTOOL_ADDRESS: 'http://tarantool:3380'
+      DIALOG_MICROSERVICE_ENABLED: 'true'
+      DIALOG_ADDRESS: 'http://dialog:8080'
     depends_on:
       db:
         condition: service_started
       rabbitmq:
         condition: service_healthy
-      tarantool:
-        condition: service_started
     ports:
       - '8080:8080'
     expose:
       - '8080'
+  dialog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APPLICATION: dialog
+    environment:
+      DEBUG: 'false'
+      TARANTOOL_ADDRESS: 'http://tarantool:3380'
+    depends_on:
+      tarantool:
+        condition: service_started
+    ports:
+      - '8081:8080'
+    expose:
+      - '8081'
   db:
     image: mysql:8.0
     restart: always
