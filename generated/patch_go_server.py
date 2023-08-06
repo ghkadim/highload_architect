@@ -1,8 +1,7 @@
 import json
+import sys
 
-open_api_schema = "api/openapi.json"
-
-with open(open_api_schema) as f:
+with open(sys.argv[1]) as f:
     schema = json.load(f)
 
 authorizePaths = set()

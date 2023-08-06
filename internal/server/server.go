@@ -4,12 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
-	"github.com/ghkadim/highload_architect/internal/server/controller"
 )
 
 type Router interface {
-	Routes() []controller.Route
+	Routes() []Route
 }
 
 type server struct {
@@ -17,7 +15,7 @@ type server struct {
 }
 
 func NewServer(routers ...Router) *server {
-	routes := make([]controller.Route, 0)
+	routes := make([]Route, 0)
 	for _, router := range routers {
 		routes = append(routes, router.Routes()...)
 	}
@@ -31,7 +29,7 @@ func (ac *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ac.router.ServeHTTP(w, req)
 }
 
-func newRouter(routes []controller.Route) *mux.Router {
+func newRouter(routes []Route) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
 		var handler http.Handler

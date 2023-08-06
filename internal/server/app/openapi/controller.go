@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
+	openapi "github.com/ghkadim/highload_architect/generated/app/go_server/go"
 	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/models"
 )

@@ -3,9 +3,9 @@ package openapi
 import (
 	"net/http"
 
-	"github.com/ghkadim/highload_architect/generated/go_server/go"
+	"github.com/ghkadim/highload_architect/generated/app/go_server/go"
 	"github.com/ghkadim/highload_architect/internal/logger"
-	"github.com/ghkadim/highload_architect/internal/server/controller"
+	"github.com/ghkadim/highload_architect/internal/server"
 )
 
 type router struct {
@@ -21,8 +21,8 @@ func NewRouter(apiService openapi.DefaultApiServicer) *router {
 	}
 }
 
-func (r *router) Routes() []controller.Route {
-	routes := make([]controller.Route, 0)
+func (r *router) Routes() []server.Route {
+	routes := make([]server.Route, 0)
 	for _, route := range r.router.Routes() {
 		authorize := false
 		for _, rt := range openapi.AuthorizeRoutes {
@@ -31,7 +31,7 @@ func (r *router) Routes() []controller.Route {
 				break
 			}
 		}
-		routes = append(routes, controller.Route{
+		routes = append(routes, server.Route{
 			Name:        route.Name,
 			Method:      route.Method,
 			Pattern:     route.Pattern,

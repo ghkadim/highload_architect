@@ -7,11 +7,11 @@ import (
 	"nhooyr.io/websocket"
 
 	"github.com/ghkadim/highload_architect/internal/logger"
-	"github.com/ghkadim/highload_architect/internal/server/controller"
+	"github.com/ghkadim/highload_architect/internal/server"
 )
 
 type router struct {
-	routes []controller.Route
+	routes []server.Route
 }
 
 func NewRouter(controller *wsController) *router {
@@ -24,7 +24,7 @@ func NewRouter(controller *wsController) *router {
 	return r
 }
 
-func (r *router) Routes() []controller.Route {
+func (r *router) Routes() []server.Route {
 	return r.routes
 }
 
@@ -52,7 +52,7 @@ func (r *router) AddRoute(
 		c.Close(websocket.StatusNormalClosure, "done")
 	}
 
-	r.routes = append(r.routes, controller.Route{
+	r.routes = append(r.routes, server.Route{
 		Name:        name,
 		Method:      http.MethodGet,
 		Pattern:     pattern,
