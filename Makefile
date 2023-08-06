@@ -101,4 +101,7 @@ generate:
 		python3 generated/patch_go_server.py ./api/$$service/openapi.json \
 			| gofmt | tee generated/$$service/go_server/go/authorize_routes.go; \
 	done
+	protoc --go_out=${GOPATH}/src --go_opt=paths=import \
+    	--go-grpc_out=${GOPATH}/src --go-grpc_opt=paths=import \
+    	api/dialog/dialog.proto
 	go generate ./...
