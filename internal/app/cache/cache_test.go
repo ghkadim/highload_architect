@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ghkadim/highload_architect/internal/cache/mocks"
+	"github.com/ghkadim/highload_architect/internal/app/cache/mocks"
 	"github.com/ghkadim/highload_architect/internal/models"
 )
 

@@ -43,18 +43,3 @@ func (s *service) DialogList(ctx context.Context, userID1, userID2 models.UserID
 	}
 	return messages, nil
 }
-
-type proxyService struct {
-}
-
-func NewProxyService(address string) Service {
-	return &proxyService{}
-}
-
-func (s *proxyService) DialogSend(ctx context.Context, message models.DialogMessage) error {
-	return nil
-}
-
-func (s *proxyService) DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error) {
-	return nil, nil
-}

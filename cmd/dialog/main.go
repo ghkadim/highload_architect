@@ -1,16 +1,18 @@
 package main
 
 import (
-	"log"
 	"net/http"
+	"sync"
 
+	"github.com/ghkadim/highload_architect/internal/app/service/dialog"
 	"github.com/ghkadim/highload_architect/internal/config"
+	grpcController "github.com/ghkadim/highload_architect/internal/dialog/controller/grpc"
+	"github.com/ghkadim/highload_architect/internal/dialog/controller/openapi"
+	"github.com/ghkadim/highload_architect/internal/dialog/tarantool"
+	"github.com/ghkadim/highload_architect/internal/grpc"
 	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/server"
-	"github.com/ghkadim/highload_architect/internal/server/dialog/openapi"
-	"github.com/ghkadim/highload_architect/internal/service/dialog"
 	"github.com/ghkadim/highload_architect/internal/session"
-	"github.com/ghkadim/highload_architect/internal/tarantool"
 )
 
 func main() {
@@ -19,7 +21,9 @@ func main() {
 
 	logger.Info("Server starting")
 
-	session_ := session.NewSession("")
+	session_ := session.NewSession(
+		config.Get("SESSION_KEY", "secret"),
+	)
 
 	dialogSvc := dialog.NewService(
 		tarantool.NewStorage(
@@ -28,9 +32,23 @@ func main() {
 		),
 	)
 
-	apiController := server.NewServer(
+	httpServer := server.NewServer(
 		openapi.NewRouter(openapi.NewController(dialogSvc, session_)),
 	)
 
-	log.Fatal(http.ListenAndServe(":8080", apiController))
+	grpcServer := grpc.NewServer(
+		grpcController.NewController(dialogSvc),
+	)
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		httpServer.ListenAndServe(":8080")
+	}()
+	go func() {
+		defer wg.Done()
+		grpcServer.ListenAndServe(":8081")
+	}()
+	wg.Wait()
 }

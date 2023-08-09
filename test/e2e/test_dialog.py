@@ -3,21 +3,28 @@ import os
 
 import pytest
 import openapi_client
+import openapi_client_dialog
 from openapi_client.api import default_api
 from openapi_client.model.dialog_user_id_send_post_request import DialogUserIdSendPostRequest
+from openapi_client_dialog.model.dialog_user_id_send_post_request import DialogUserIdSendPostRequest
 from openapi_client.model.dialog_message import DialogMessage
+from openapi_client_dialog.model.dialog_message import DialogMessage
+
 from user import User
 
 
-def test_unauthorized():
-    api = default_api.DefaultApi()
-    with pytest.raises(openapi_client.exceptions.UnauthorizedException):
+@pytest.mark.parametrize(
+    "client_lib", [openapi_client, openapi_client_dialog])
+def test_unauthorized(client_lib):
+    api = client_lib.api.default_api.DefaultApi()
+    with pytest.raises(client_lib.exceptions.UnauthorizedException):
         api.dialog_user_id_list_get("12345")
 
-    with pytest.raises(openapi_client.exceptions.UnauthorizedException):
+    with pytest.raises(client_lib.exceptions.UnauthorizedException):
         api.dialog_user_id_send_post(
             "12345",
-            dialog_user_id_send_post_request=DialogUserIdSendPostRequest(text="hello"))
+            dialog_user_id_send_post_request=
+                client_lib.model.dialog_user_id_send_post_request.DialogUserIdSendPostRequest(text="hello"))
 
 
 @pytest.mark.skip("disabled since no check for user existence")
@@ -31,26 +38,75 @@ def test_unknown_user(default_user):
     assert len(messages) == 0
 
 
-def test_dialog(default_user, make_user):
+class LegacyDialogApi:
+    DialogMessage = openapi_client.model.dialog_message.DialogMessage
+    DialogUserIdSendPostRequest = \
+        openapi_client.model.dialog_user_id_send_post_request.DialogUserIdSendPostRequest
+
+    def send(self, from_user, to_user, text):
+        from_user.api.dialog_user_id_send_post(
+            to_user.user_id,
+            dialog_user_id_send_post_request=self.DialogUserIdSendPostRequest(text=text))
+
+    def list(self, from_user, to_user):
+        return from_user.api.dialog_user_id_list_get(to_user.user_id)
+
+
+class NewDialogApi:
+    DialogMessage = openapi_client_dialog.model.dialog_message.DialogMessage
+    DialogUserIdSendPostRequest = \
+        openapi_client_dialog.model.dialog_user_id_send_post_request.DialogUserIdSendPostRequest
+
+    def send(self, from_user, to_user, text):
+        from_user.dialog_api.dialog_user_id_send_post(
+            to_user.user_id,
+            dialog_user_id_send_post_request=self.DialogUserIdSendPostRequest(text=text))
+
+    def list(self, from_user, to_user):
+        return from_user.dialog_api.dialog_user_id_list_get(to_user.user_id)
+
+
+@pytest.mark.parametrize(
+    "dialog_api", [LegacyDialogApi(), NewDialogApi()])
+def test_dialog(default_user, make_user, dialog_api):
     friend = make_user()
-
-    default_user.api.dialog_user_id_send_post(
-        friend.user_id,
-        dialog_user_id_send_post_request=DialogUserIdSendPostRequest(text="hello"))
-
-    messages = default_user.api.dialog_user_id_list_get(friend.user_id)
-    assert messages == [DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello")]
-
     friend.login()
 
-    friend.api.dialog_user_id_send_post(
-        default_user.user_id,
-        dialog_user_id_send_post_request=DialogUserIdSendPostRequest(text="hello"))
+    dialog_api.send(default_user, friend, "hello")
+    messages = dialog_api.list(default_user, friend)
+    assert messages == [dialog_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello")]
 
-    messages = default_user.api.dialog_user_id_list_get(friend.user_id)
+    dialog_api.send(friend, default_user, "hello")
+    messages = dialog_api.list(friend, default_user)
     assert messages == [
-        DialogMessage(_from=friend.user_id, to=default_user.user_id, text="hello"),
-        DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello")
+        dialog_api.DialogMessage(_from=friend.user_id, to=default_user.user_id, text="hello"),
+        dialog_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello")
+    ]
+
+    messages_on_friend = dialog_api.list(default_user, friend)
+    assert messages == messages_on_friend
+
+
+def test_backward_compatibility(default_user, make_user):
+    legacy_api = LegacyDialogApi()
+    new_api = NewDialogApi()
+
+    friend = make_user()
+    friend.login()
+
+    legacy_api.send(default_user, friend, "hello legacy")
+    new_api.send(friend, default_user, "hello new")
+
+    messages = legacy_api.list(friend, default_user)
+    assert messages == [
+        legacy_api.DialogMessage(_from=friend.user_id, to=default_user.user_id, text="hello new"),
+        legacy_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello legacy")
+    ]
+
+    messages = new_api.list(friend, default_user)
+    assert messages == [
+        new_api.DialogMessage(_from=friend.user_id, to=default_user.user_id, text="hello new"),
+        new_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello legacy")
     ]
 
 

@@ -1,24 +1,24 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
-	"github.com/ghkadim/highload_architect/internal/cache"
+	"github.com/ghkadim/highload_architect/internal/app/cache"
+	"github.com/ghkadim/highload_architect/internal/app/controller/openapi"
+	"github.com/ghkadim/highload_architect/internal/app/controller/websocket"
+	dialogSvc "github.com/ghkadim/highload_architect/internal/app/dialog"
+	"github.com/ghkadim/highload_architect/internal/app/mysql"
+	"github.com/ghkadim/highload_architect/internal/app/rabbitmq"
+	"github.com/ghkadim/highload_architect/internal/app/service/dialog"
+	"github.com/ghkadim/highload_architect/internal/app/service/friend"
+	"github.com/ghkadim/highload_architect/internal/app/service/post"
+	"github.com/ghkadim/highload_architect/internal/app/service/user"
 	"github.com/ghkadim/highload_architect/internal/config"
+	"github.com/ghkadim/highload_architect/internal/dialog/tarantool"
 	"github.com/ghkadim/highload_architect/internal/logger"
-	"github.com/ghkadim/highload_architect/internal/mysql"
-	"github.com/ghkadim/highload_architect/internal/rabbitmq"
 	"github.com/ghkadim/highload_architect/internal/server"
-	"github.com/ghkadim/highload_architect/internal/server/app/openapi"
-	"github.com/ghkadim/highload_architect/internal/server/app/websocket"
-	"github.com/ghkadim/highload_architect/internal/service/dialog"
-	"github.com/ghkadim/highload_architect/internal/service/friend"
-	"github.com/ghkadim/highload_architect/internal/service/post"
-	"github.com/ghkadim/highload_architect/internal/service/user"
 	"github.com/ghkadim/highload_architect/internal/session"
-	"github.com/ghkadim/highload_architect/internal/tarantool"
 )
 
 func main() {
@@ -103,13 +103,16 @@ func main() {
 		eventPublisher = rabbitmq.NewNopPublisher()
 	}
 
-	var dialogSvc dialog.Service
+	var dialogService dialog.Service
 	if config.Get("DIALOG_MICROSERVICE_ENABLED", false) {
-		dialogSvc = dialog.NewProxyService(config.Get("DIALOG_ADDRESS", "dialog:8080"))
+		dialogService, err = dialogSvc.NewClient(config.Get("DIALOG_ADDRESS", "localhost:8081"))
+		if err != nil {
+			logger.Fatal("Failed to create client for dialog service: %v", err)
+		}
 	} else {
 		if config.Get("IN_MEMORY_DIALOG_ENABLED", true) {
 			logger.Info("In memory dialogs enabled")
-			dialogSvc = dialog.NewService(
+			dialogService = dialog.NewService(
 				tarantool.NewStorage(
 					config.Get("TARANTOOL_ADDRESS", ""),
 					http.Client{},
@@ -117,7 +120,7 @@ func main() {
 			)
 		} else {
 			logger.Info("In memory dialogs disabled")
-			dialogSvc = dialog.NewService(storage)
+			dialogService = dialog.NewService(storage)
 		}
 	}
 
@@ -125,7 +128,7 @@ func main() {
 		userService:   user.NewService(storage, session_),
 		friendService: friend.NewService(storage, cache_, eventPublisher),
 		postService:   post.NewService(storage, cache_, eventPublisher, eventConsumer),
-		dialogService: dialogSvc,
+		dialogService: dialogService,
 	}
 
 	routers := []server.Router{
@@ -139,9 +142,8 @@ func main() {
 			websocket.NewController(apiService, session_)))
 	}
 
-	apiController := server.NewServer(routers...)
-
-	log.Fatal(http.ListenAndServe(":8080", apiController))
+	srv := server.NewServer(routers...)
+	srv.ListenAndServe(":8080")
 }
 
 type userService = *user.Service

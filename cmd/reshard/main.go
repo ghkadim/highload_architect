@@ -9,9 +9,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/ghkadim/highload_architect/internal/app/mysql"
 	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/models"
-	"github.com/ghkadim/highload_architect/internal/mysql"
 )
 
 const (
