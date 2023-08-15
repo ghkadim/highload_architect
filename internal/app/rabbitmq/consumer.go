@@ -57,7 +57,7 @@ func NewConsumer(
 }
 
 func (c *consumer) PostAdded(ctx context.Context, userID models.UserID, friends []models.UserID) (<-chan result.Result[models.Post], closer.Closer) {
-	logger.Debug("Consumer.PostAdded: new subscriberId=%s for authorId=%s", userID, friends)
+	logger.Debugf("Consumer.PostAdded: new subscriberId=%s for authorId=%s", userID, friends)
 	dataCh := make(chan result.Result[post], c.queueLen)
 	closers := make([]closer.Closer, 0, len(friends))
 	friendMap := make(map[models.UserID]struct{}, len(friends))
@@ -73,7 +73,7 @@ func (c *consumer) PostAdded(ctx context.Context, userID models.UserID, friends 
 
 	resCh := make(chan result.Result[models.Post], c.queueLen)
 	clsr := closer.FromFunction(func() error {
-		logger.Debug("Consumer.PostAdded: closing subscription for subscriberId=%s", userID)
+		logger.Debugf("Consumer.PostAdded: closing subscription for subscriberId=%s", userID)
 		var resErr error
 		for _, cl := range closers {
 			err := cl.Close()
@@ -119,7 +119,7 @@ func (c *consumer) PostAdded(ctx context.Context, userID models.UserID, friends 
 }
 
 func (c *consumer) FriendUpdated(ctx context.Context, userID models.UserID) (<-chan result.Result[models.FriendEvent], closer.Closer) {
-	logger.Debug("Consumer.FriendUpdated: subscribe userID=%s", userID)
+	logger.Debugf("Consumer.FriendUpdated: subscribe userID=%s", userID)
 	dataCh := make(chan result.Result[friendUpdate], c.queueLen)
 
 	rk := friendUpdatedRoutingKey(userID)
@@ -130,7 +130,7 @@ func (c *consumer) FriendUpdated(ctx context.Context, userID models.UserID) (<-c
 
 	resCh := make(chan result.Result[models.FriendEvent], c.queueLen)
 	clsr := closer.FromFunction(func() error {
-		logger.Debug("Consumer.FriendUpdated: closing subscription for subscriberId=%s", userID)
+		logger.Debugf("Consumer.FriendUpdated: closing subscription for subscriberId=%s", userID)
 		err := friendUpdateCloser.Close()
 
 		close(dataCh)

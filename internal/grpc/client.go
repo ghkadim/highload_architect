@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -16,7 +17,9 @@ func NewClient(addr string) (*grpc.ClientConn, error) {
 	conn, err := grpc.Dial(
 		addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithChainUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithChainUnaryInterceptor(clientLogMiddleware),
+		grpc.WithChainStreamInterceptor(otelgrpc.StreamClientInterceptor()),
 	)
 	if err != nil {
 		return nil, err
@@ -40,14 +43,14 @@ func clientLogMiddleware(
 	st := status.Convert(err)
 
 	if st.Code() == codes.OK {
-		logger.Debug(
+		logger.FromContext(ctx).Debugf(
 			"%s %d %s",
 			method,
 			st.Code(),
 			time.Since(start),
 		)
 	} else {
-		logger.Debug(
+		logger.FromContext(ctx).Debugf(
 			"%s %d %s: %s",
 			method,
 			st.Code(),

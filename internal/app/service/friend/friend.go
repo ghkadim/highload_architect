@@ -49,7 +49,7 @@ func (s *Service) FriendDelete(ctx context.Context, userID1, userID2 models.User
 	s.cache.FriendDelete(userID1, userID2)
 	err = s.eventPublisher.FriendDelete(userID1, userID2)
 	if err != nil {
-		logger.Error("Failed to notify about friend changes: %v", err)
+		logger.Errorf("Failed to notify about friend changes: %v", err)
 	}
 	return nil
 }
@@ -63,7 +63,7 @@ func (s *Service) FriendAdd(ctx context.Context, userID1, userID2 models.UserID)
 	s.cache.FriendAdd(userID1, userID2)
 	err = s.eventPublisher.FriendAdd(userID1, userID2)
 	if err != nil {
-		logger.Error("Failed to notify about friend changes: %v", err)
+		logger.Errorf("Failed to notify about friend changes: %v", err)
 	}
 	return nil
 }

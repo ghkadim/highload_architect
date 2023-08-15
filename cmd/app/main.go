@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"strings"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 
 	"github.com/ghkadim/highload_architect/internal/app/cache"
 	"github.com/ghkadim/highload_architect/internal/app/controller/openapi"
@@ -19,13 +23,18 @@ import (
 	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/server"
 	"github.com/ghkadim/highload_architect/internal/session"
+	"github.com/ghkadim/highload_architect/internal/trace"
 )
 
 func main() {
 	l := logger.Init(config.Get("DEBUG", false))
 	defer func() { _ = l.Sync() }()
 
-	logger.Info("Server starting")
+	logger.Infof("Server starting")
+	exporter := trace.NewJaegerExporter()
+	defer func() { _ = exporter.Shutdown(context.Background()) }()
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	storage, err := mysql.NewStorage(
 		config.Get("DB_USER", "user"),
@@ -35,7 +44,7 @@ func main() {
 		config.Get("DB_DEDICATED_SHARDS", make(mysql.DedicatedShardID)),
 	)
 	if err != nil {
-		logger.Fatal("failed to init db")
+		logger.Fatalf("failed to init db")
 	}
 
 	replicas := make([]mysql.Storage, 0)
@@ -51,7 +60,7 @@ func main() {
 			config.Get("DB_DEDICATED_SHARDS", make(mysql.DedicatedShardID)),
 		)
 		if err != nil {
-			logger.Fatal("failed to init slave db")
+			logger.Fatalf("failed to init slave db")
 		}
 
 		replicas = append(replicas, replica)
@@ -66,10 +75,10 @@ func main() {
 		cache_ = cache.NewCache(
 			config.Get("CACHE_FEED_LIMIT", 1000),
 			cache.NewLoadWithRetry(storage))
-		logger.Info("Feed cache enabled")
+		logger.Infof("Feed cache enabled")
 	} else {
 		cache_ = cache.NewDisabledCache()
-		logger.Info("Feed cache disabled")
+		logger.Infof("Feed cache disabled")
 	}
 
 	session_ := session.NewSession(
@@ -87,7 +96,7 @@ func main() {
 			config.Get("EVENT_CONSUMER_QUEUE_LEN", 1000),
 		)
 		if err != nil {
-			logger.Fatal("Failed to create event consumer: %v", err)
+			logger.Fatalf("Failed to create event consumer: %v", err)
 		}
 
 		eventPublisher, err = rabbitmq.NewPublisher(
@@ -96,7 +105,7 @@ func main() {
 			config.Get("RMQ_ADDRESS", "localhost:5672"),
 		)
 		if err != nil {
-			logger.Fatal("Failed to create event publisher: %v", err)
+			logger.Fatalf("Failed to create event publisher: %v", err)
 		}
 	} else {
 		eventConsumer = rabbitmq.NewNopConsumer()
@@ -107,11 +116,11 @@ func main() {
 	if config.Get("DIALOG_MICROSERVICE_ENABLED", false) {
 		dialogService, err = dialogSvc.NewClient(config.Get("DIALOG_ADDRESS", "localhost:8081"))
 		if err != nil {
-			logger.Fatal("Failed to create client for dialog service: %v", err)
+			logger.Fatalf("Failed to create client for dialog service: %v", err)
 		}
 	} else {
 		if config.Get("IN_MEMORY_DIALOG_ENABLED", true) {
-			logger.Info("In memory dialogs enabled")
+			logger.Infof("In memory dialogs enabled")
 			dialogService = dialog.NewService(
 				tarantool.NewStorage(
 					config.Get("TARANTOOL_ADDRESS", ""),
@@ -119,7 +128,7 @@ func main() {
 				),
 			)
 		} else {
-			logger.Info("In memory dialogs disabled")
+			logger.Infof("In memory dialogs disabled")
 			dialogService = dialog.NewService(storage)
 		}
 	}
@@ -137,7 +146,7 @@ func main() {
 	}
 
 	if config.Get("ASYNCAPI_ENABLED", true) {
-		logger.Info("Async API enabled")
+		logger.Infof("Async API enabled")
 		routers = append(routers, websocket.NewRouter(
 			websocket.NewController(apiService, session_)))
 	}

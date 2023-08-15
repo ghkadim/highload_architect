@@ -16,6 +16,8 @@ services:
       RMQ_ADDRESS: 'rabbitmq:5672'
       DIALOG_MICROSERVICE_ENABLED: 'true'
       DIALOG_ADDRESS: 'dialog:8081'
+      OTEL_SERVICE_NAME: 'app'
+      OTEL_EXPORTER_JAEGER_ENDPOINT: 'http://jaeger:14268/api/traces'
     depends_on:
       db:
         condition: service_started
@@ -34,6 +36,8 @@ services:
     environment:
       DEBUG: ${DEBUG:-false}
       TARANTOOL_ADDRESS: 'http://tarantool:3380'
+      OTEL_SERVICE_NAME: 'dialog'
+      OTEL_EXPORTER_JAEGER_ENDPOINT: 'http://jaeger:14268/api/traces'
     depends_on:
       tarantool:
         condition: service_started
@@ -81,6 +85,16 @@ services:
     volumes:
       - tarantool-db:/var/lib/tarantool
       - ${PWD}/tarantool/src:/opt/tarantool
+  jaeger:
+    image: jaegertracing/all-in-one:1.6
+    ports:
+      - '5775:5775/udp'
+      - '6831:6831/udp'
+      - '6832:6832/udp'
+      - '5778:5778'
+      - '16686:16686'
+      - '14268:14268'
+      - '9411:9411'
 volumes:
   my-db:
   tarantool-db:

@@ -19,7 +19,7 @@ func Get[T any](variable string, defaultValue T) T {
 	var value T
 	err := parseValue(valueStr, &value)
 	if err != nil {
-		logger.Info("Failed to parse env variable %s, return defaultValue %v: %v",
+		logger.Infof("Failed to parse env variable %s, return defaultValue %v: %v",
 			variable, defaultValue, err)
 		return defaultValue
 	}

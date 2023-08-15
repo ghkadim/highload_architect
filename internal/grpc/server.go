@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,7 +32,9 @@ func NewServer(reg ...registrable) *Server {
 
 func (s *Server) ListenAndServe(addr string) {
 	srv := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
 		grpc.ChainUnaryInterceptor(logMiddleware),
+		grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()),
 	)
 	for _, r := range s.reg {
 		r.Register(srv)
@@ -43,19 +46,19 @@ func (s *Server) ListenAndServe(addr string) {
 	go func() {
 		ln, err := net.Listen("tcp", addr)
 		if err != nil {
-			logger.Fatal("listen: %s\n", err)
+			logger.Fatalf("listen: %s\n", err)
 		}
 		if err := srv.Serve(ln); err != nil && err != grpc.ErrServerStopped {
-			logger.Fatal("listen: %s\n", err)
+			logger.Fatalf("listen: %s\n", err)
 		}
 	}()
-	logger.Info("Server started")
+	logger.Infof("Server started")
 
 	<-done
-	logger.Info("Server stopping")
+	logger.Infof("Server stopping")
 
 	srv.GracefulStop()
-	logger.Info("Server exited properly")
+	logger.Infof("Server exited properly")
 }
 
 func logMiddleware(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (
@@ -67,14 +70,14 @@ func logMiddleware(ctx context.Context, req interface{}, info *grpc.UnaryServerI
 	st := status.Convert(err)
 
 	if st.Code() == codes.OK {
-		logger.Debug(
+		logger.FromContext(ctx).Debugf(
 			"%s %d %s",
 			info.FullMethod,
 			st.Code(),
 			time.Since(start),
 		)
 	} else {
-		logger.Debug(
+		logger.FromContext(ctx).Debugf(
 			"%s %d %s: %s",
 			info.FullMethod,
 			st.Code(),

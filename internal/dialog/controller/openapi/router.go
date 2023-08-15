@@ -44,7 +44,7 @@ func (r *router) Routes() []server.Route {
 
 func errorHandler(w http.ResponseWriter, r *http.Request, err error, result *openapi.ImplResponse) {
 	if err != nil {
-		logger.Error("%v", err)
+		logger.Errorf("%v", err)
 	}
 	openapi.DefaultErrorHandler(w, r, err, result)
 }

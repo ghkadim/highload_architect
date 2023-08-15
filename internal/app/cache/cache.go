@@ -51,13 +51,13 @@ func (c *cache) FriendAdd(userID1, userID2 models.UserID) {
 	go func() {
 		posts, err := c.dataSource.UserPosts(context.Background(), userID2, c.feedLimitSize)
 		if err != nil {
-			logger.Error("FriendAdd failed to load UserPosts: %v", err)
+			logger.Errorf("FriendAdd failed to load UserPosts: %v", err)
 			return
 		}
 		for _, p := range posts {
 			c.feedPostAdd(userID1, p)
 		}
-		logger.Info("UsersPosts for %s from %s loaded to cache (%d posts)", userID1, userID2, len(posts))
+		logger.Infof("UsersPosts for %s from %s loaded to cache (%d posts)", userID1, userID2, len(posts))
 	}()
 }
 
@@ -74,14 +74,14 @@ func (c *cache) FriendDelete(userID1, userID2 models.UserID) {
 	go func() {
 		posts, err := c.dataSource.PostFeed(context.Background(), userID1, 0, c.feedLimitSize)
 		if err != nil {
-			logger.Error("FriendDelete failed to load UserPosts: %v", err)
+			logger.Errorf("FriendDelete failed to load UserPosts: %v", err)
 			return
 		}
 		c.feedInit(userID1)
 		for _, p := range posts {
 			c.feedPostAdd(userID1, p)
 		}
-		logger.Info("Feed for %s loaded to cache (%d posts)", userID1, len(posts))
+		logger.Infof("Feed for %s loaded to cache (%d posts)", userID1, len(posts))
 	}()
 }
 
@@ -121,21 +121,21 @@ func (c *cache) PostFeed(userID models.UserID, offset, limit int) ([]models.Post
 		go func() {
 			friends, err := c.dataSource.UserFriends(context.Background(), userID)
 			if err != nil {
-				logger.Error("PostFeed failed to load UserFriends: %v", err)
+				logger.Errorf("PostFeed failed to load UserFriends: %v", err)
 				return
 			}
 			posts, err := c.dataSource.PostFeed(context.Background(), userID, 0, c.feedLimitSize)
 			if err != nil {
-				logger.Error("PostFeed failed to load PostFeed: %v", err)
+				logger.Errorf("PostFeed failed to load PostFeed: %v", err)
 				return
 			}
 			c.feedInit(userID)
 			c.friendsAdd(userID, friends)
-			logger.Info("Friends for %s loaded to cache (%d friends)", userID, len(friends))
+			logger.Infof("Friends for %s loaded to cache (%d friends)", userID, len(friends))
 			for _, p := range posts {
 				c.feedPostAdd(userID, p)
 			}
-			logger.Info("Feed for %s loaded to cache (%d posts)", userID, len(posts))
+			logger.Infof("Feed for %s loaded to cache (%d posts)", userID, len(posts))
 		}()
 		return nil, models.ErrFeedNotFound
 	}

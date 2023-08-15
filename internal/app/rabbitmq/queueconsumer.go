@@ -79,16 +79,16 @@ func (c *queueConsumer[T]) startConsumer(
 	routingKey string,
 ) (closer.Closer, error) {
 	queueName := fmt.Sprintf("%s.%s", c.queueNamePrefix, routingKey)
-	logger.Debug("Starting RMQ consumer queue=%s exchange=%s", queueName, c.exchangeName)
+	logger.Debugf("Starting RMQ consumer queue=%s exchange=%s", queueName, c.exchangeName)
 	cons, err := rabbitmq.NewConsumer(
 		c.conn,
 		func(d rabbitmq.Delivery) rabbitmq.Action {
-			logger.Debug("RMQ_CONSUME queue=%s body=%s", queueName, string(d.Body))
+			logger.Debugf("RMQ_CONSUME queue=%s body=%s", queueName, string(d.Body))
 			c.mtx.Lock()
 			defer c.mtx.Unlock()
 			channelsForRK, ok := c.consumingChannels[routingKey]
 			if !ok {
-				logger.Error("All channels for RK=%s are closed", routingKey)
+				logger.Errorf("All channels for RK=%s are closed", routingKey)
 				return rabbitmq.NackDiscard
 			}
 
@@ -116,7 +116,7 @@ func (c *queueConsumer[T]) startConsumer(
 		return nil, err
 	}
 	return closer.FromFunction(func() error {
-		logger.Debug("Stopping RMQ consumer queue=%s exchange=%s", queueName, c.exchangeName)
+		logger.Debugf("Stopping RMQ consumer queue=%s exchange=%s", queueName, c.exchangeName)
 		cons.Close()
 		return nil
 	}), nil

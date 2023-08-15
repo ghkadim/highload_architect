@@ -124,7 +124,7 @@ func (c *apiController) PostDeleteIdPut(ctx context.Context, id string) (openapi
 	err = c.service.PostDelete(ctx, userID, models.PostID(id))
 	if err != nil {
 		if errors.Is(err, models.ErrPostNotFound) {
-			logger.Error("Post already deleted: %v", err)
+			logger.Errorf("Post already deleted: %v", err)
 			return successResponse(nil)
 		}
 		return errorResponse(err)

@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"sync"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 
 	"github.com/ghkadim/highload_architect/internal/app/service/dialog"
 	"github.com/ghkadim/highload_architect/internal/config"
@@ -13,13 +18,18 @@ import (
 	"github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/server"
 	"github.com/ghkadim/highload_architect/internal/session"
+	"github.com/ghkadim/highload_architect/internal/trace"
 )
 
 func main() {
 	l := logger.Init(config.Get("DEBUG", false))
 	defer func() { _ = l.Sync() }()
 
-	logger.Info("Server starting")
+	logger.Infof("Server starting")
+	exporter := trace.NewJaegerExporter()
+	defer func() { _ = exporter.Shutdown(context.Background()) }()
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	session_ := session.NewSession(
 		config.Get("SESSION_KEY", "secret"),
@@ -28,7 +38,9 @@ func main() {
 	dialogSvc := dialog.NewService(
 		tarantool.NewStorage(
 			config.Get("TARANTOOL_ADDRESS", ""),
-			http.Client{},
+			http.Client{
+				Transport: otelhttp.NewTransport(http.DefaultTransport),
+			},
 		),
 	)
 

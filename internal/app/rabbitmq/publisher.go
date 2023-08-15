@@ -89,7 +89,7 @@ func (p *publisher) friendUpdate(updateType models.FriendEventType, userID, frie
 }
 
 func (p *publisher) publish(rmqPub *rabbitmq.Publisher, exchangeName, routingKey string, data []byte) error {
-	logger.Debug("RMQ_PUBLISH exchange=%s RK=%v %s", exchangeName, routingKey, string(data))
+	logger.Debugf("RMQ_PUBLISH exchange=%s RK=%v %s", exchangeName, routingKey, string(data))
 	return rmqPub.Publish(
 		data,
 		[]string{routingKey},

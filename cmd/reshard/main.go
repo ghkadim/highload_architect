@@ -30,18 +30,18 @@ func main() {
 	defer func() { _ = l.Sync() }()
 
 	if *mode != syncMode && *mode != cleanupMode {
-		logger.Fatal("Invalid mode value %s", *mode)
+		logger.Fatalf("Invalid mode value %s", *mode)
 	}
 
 	data, err := os.ReadFile(*conf)
 	if err != nil {
-		logger.Fatal("Failed to read config from %s: %v", *conf, err)
+		logger.Fatalf("Failed to read config from %s: %v", *conf, err)
 	}
 
 	var cnf config
 	err = yaml.Unmarshal(data, &cnf)
 	if err != nil {
-		logger.Fatal("Failed to parse config from %s: %v", *conf, err)
+		logger.Fatalf("Failed to parse config from %s: %v", *conf, err)
 	}
 
 	// trap Ctrl+C and call cancel on the context
@@ -53,17 +53,17 @@ func main() {
 	case syncMode:
 		maxID, err := r.sync(ctx)
 		if err != nil {
-			logger.Fatal("Failed to sync shards: %v", err)
+			logger.Fatalf("Failed to sync shards: %v", err)
 		}
-		logger.Info("Syncing shards completed with max id=%d", maxID)
+		logger.Infof("Syncing shards completed with max id=%d", maxID)
 	case cleanupMode:
 		deleted, err := r.cleanup(ctx)
 		if err != nil {
-			logger.Fatal("Failed to cleanup shards: %v", err)
+			logger.Fatalf("Failed to cleanup shards: %v", err)
 		}
-		logger.Info("Shards cleanup completed with %d rows deleted", deleted)
+		logger.Infof("Shards cleanup completed with %d rows deleted", deleted)
 	default:
-		logger.Fatal("Unexpected mode: %s", *mode)
+		logger.Fatalf("Unexpected mode: %s", *mode)
 	}
 }
 
@@ -96,7 +96,7 @@ func (r resharder) sync(ctx context.Context) (models.DialogMessageID, error) {
 				continue
 			}
 
-			logger.Debug("Syncing shards [%s]->[%s] started", beforeDb.Address, afterDb.Address)
+			logger.Debugf("Syncing shards [%s]->[%s] started", beforeDb.Address, afterDb.Address)
 			afterCl, err := r.getClient(afterDb)
 			if err != nil {
 				return 0, err
@@ -104,7 +104,7 @@ func (r resharder) sync(ctx context.Context) (models.DialogMessageID, error) {
 			messageCount := 0
 			id := models.DialogMessageID(r.conf.FromID)
 			for {
-				logger.Debug("Fetching [%s] messages from id=%d matching shard '%s'",
+				logger.Debugf("Fetching [%s] messages from id=%d matching shard '%s'",
 					beforeDb.Address, id, afterDb.ShardMatchRegexp)
 				messages, err := beforeCl.DialogMatchingShard(ctx, afterDb.ShardMatchRegexp, id, r.conf.Limit)
 				if err != nil {
@@ -114,12 +114,12 @@ func (r resharder) sync(ctx context.Context) (models.DialogMessageID, error) {
 					if maxID < id {
 						maxID = id
 					}
-					logger.Info("Syncing [%s]->[%s] completed with max id=%d, %d messages copied", beforeDb.Address, afterDb.Address, id, messageCount)
+					logger.Infof("Syncing [%s]->[%s] completed with max id=%d, %d messages copied", beforeDb.Address, afterDb.Address, id, messageCount)
 					break
 				}
 				messageCount += len(messages)
 
-				logger.Debug("Copying [%s]->[%s] %d messages", beforeDb.Address, afterDb.Address, len(messages))
+				logger.Debugf("Copying [%s]->[%s] %d messages", beforeDb.Address, afterDb.Address, len(messages))
 				if !r.dryRun {
 					err = afterCl.DialogBulkInsert(ctx, messages)
 					if err != nil {
@@ -140,13 +140,13 @@ func (r resharder) cleanup(ctx context.Context) (int64, error) {
 		if err != nil {
 			return 0, err
 		}
-		logger.Info("Deleting [%s] messages not matching %s", db.Address, db.ShardMatchRegexp)
+		logger.Infof("Deleting [%s] messages not matching %s", db.Address, db.ShardMatchRegexp)
 		if !r.dryRun {
 			count, err := cl.DialogsNotMatchingShardDelete(ctx, db.ShardMatchRegexp)
 			if err != nil {
 				return deletedCount, err
 			}
-			logger.Debug("Deleted [%s] %d messages", db.Address, count)
+			logger.Debugf("Deleted [%s] %d messages", db.Address, count)
 			deletedCount += count
 		}
 	}

@@ -37,7 +37,7 @@ func (r *router) AddRoute(
 	f := func(w http.ResponseWriter, r *http.Request) {
 		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{})
 		if err != nil {
-			logger.Error("Failed to accept ws: %v", err)
+			logger.Errorf("Failed to accept ws: %v", err)
 			return
 		}
 		defer c.Close(websocket.StatusInternalError, "ws error")
@@ -47,7 +47,7 @@ func (r *router) AddRoute(
 			if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
 				return
 			}
-			logger.Error("Websocket failed: %v", err)
+			logger.Errorf("Websocket failed: %v", err)
 		}
 		c.Close(websocket.StatusNormalClosure, "done")
 	}

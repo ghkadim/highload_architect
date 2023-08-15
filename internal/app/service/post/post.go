@@ -70,7 +70,7 @@ func (s *Service) PostAdd(ctx context.Context, text string, author models.UserID
 	s.cache.PostAdd(post)
 	err = s.eventPublisher.PostAdd(post)
 	if err != nil {
-		logger.Error("Failed to send event for post: %v", err)
+		logger.Errorf("Failed to send event for post: %v", err)
 	}
 	return post.ID, nil
 }
@@ -79,7 +79,7 @@ func (s *Service) PostDelete(ctx context.Context, userID models.UserID, postID m
 	post, err := s.storage.PostGet(ctx, postID)
 	if err != nil {
 		if errors.Is(err, models.ErrPostNotFound) {
-			logger.Error("Post already deleted: %v", err)
+			logger.Errorf("Post already deleted: %v", err)
 			return nil
 		}
 	}
@@ -184,14 +184,14 @@ func (s *Service) PostFeedPosted(ctx context.Context, subscriber models.UserID) 
 					return
 				}
 
-				logger.Debug("Got FriendUpdate event for user=%s", subscriber)
+				logger.Debugf("Got FriendUpdate event for user=%s", subscriber)
 				switch update.Type {
 				case models.FriendAddedEvent:
 					syncFriendsRequired.Store(true)
 				case models.FriendDeletedEvent:
 					syncFriendsRequired.Store(true)
 				default:
-					logger.Error("Unknown FriendEventType %v", update.Type)
+					logger.Errorf("Unknown FriendEventType %v", update.Type)
 				}
 			case <-ctx.Done():
 				return
@@ -206,7 +206,7 @@ func (s *Service) PostFeedPosted(ctx context.Context, subscriber models.UserID) 
 			select {
 			case <-ticker.C:
 				if syncFriendsRequired.Swap(false) {
-					logger.Debug("Syncing friends for user=%s", subscriber)
+					logger.Debugf("Syncing friends for user=%s", subscriber)
 					friends, err := s.storage.UserFriends(ctx, subscriber)
 					if err != nil {
 						errorCh <- fmt.Errorf("failed to listen friend updates: %w", err)

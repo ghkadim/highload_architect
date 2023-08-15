@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
 	log "github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/models"
 )
@@ -43,7 +45,7 @@ func logger(inner http.Handler) http.Handler {
 
 		inner.ServeHTTP(writer, r)
 
-		log.Debug(
+		log.FromContext(r.Context()).Debugf(
 			"%s %s %d %s",
 			r.Method,
 			r.RequestURI,
@@ -51,4 +53,8 @@ func logger(inner http.Handler) http.Handler {
 			time.Since(start),
 		)
 	})
+}
+
+func trace(inner http.Handler, name string) http.Handler {
+	return otelhttp.NewHandler(inner, name)
 }

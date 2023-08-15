@@ -38,7 +38,7 @@ func (c *wsController) PostFeedPosted(ctx context.Context, r *http.Request, w *w
 		return models.ErrUnauthorized
 	}
 
-	logger.Info("PostFeedPosted: starting new subscription for userID=%s", subscriberID)
+	logger.Infof("PostFeedPosted: starting new subscription for userID=%s", subscriberID)
 	ctx = w.CloseRead(ctx)
 	postCh := c.service.PostFeedPosted(ctx, subscriberID)
 	for {
@@ -52,7 +52,7 @@ func (c *wsController) PostFeedPosted(ctx context.Context, r *http.Request, w *w
 				return err
 			}
 
-			logger.Debug("PostFeedPosted: new post for userID=%s", subscriberID)
+			logger.Debugf("PostFeedPosted: new post for userID=%s", subscriberID)
 			writer, err := w.Writer(ctx, websocket.MessageText)
 			if err != nil {
 				return err
@@ -68,7 +68,7 @@ func (c *wsController) PostFeedPosted(ctx context.Context, r *http.Request, w *w
 			}
 			writer.Close()
 		case <-ctx.Done():
-			logger.Info("PostFeedPosted: connection closed for userID=%s", subscriberID)
+			logger.Infof("PostFeedPosted: connection closed for userID=%s", subscriberID)
 			return nil
 		}
 	}

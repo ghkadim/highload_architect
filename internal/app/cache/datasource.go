@@ -39,7 +39,7 @@ func loadData[T any](s *loadWithRetry, f func() (T, error)) (T, error) {
 	for {
 		res, err := f()
 		if err != nil {
-			logger.Error("Cache failed to fetch data: %v", err)
+			logger.Errorf("Cache failed to fetch data: %v", err)
 			time.Sleep(time.Minute)
 			continue
 		}

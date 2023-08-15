@@ -11,6 +11,7 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/uptrace/opentelemetry-go-extra/otelsql"
 
 	"github.com/ghkadim/highload_architect/internal/models"
 )
@@ -60,7 +61,7 @@ func NewStorage(
 		AllowNativePasswords: true,
 	}
 
-	db, err := sql.Open("mysql", cfg.FormatDSN())
+	db, err := otelsql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		return nil, err
 	}
