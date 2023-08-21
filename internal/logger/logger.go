@@ -1,23 +1,22 @@
 package logger
 
 import (
+	"context"
+
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-var zapLog *zap.SugaredLogger
+var Log *otelzap.Logger
 
-func init() {
-	Init(false)
-}
-
-func Init(debug bool) *zap.SugaredLogger {
+func Init(debug bool) Syncer {
 	var err error
 	config := zap.NewProductionConfig()
-	enccoderConfig := zap.NewProductionEncoderConfig()
-	zapcore.TimeEncoderOfLayout("Jan _2 15:04:05.000000000")
-	enccoderConfig.StacktraceKey = "" // to hide stacktrace info
-	config.EncoderConfig = enccoderConfig
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	encoderConfig.StacktraceKey = "" // to hide stacktrace info
+	config.EncoderConfig = encoderConfig
 	if debug {
 		config.Level.SetLevel(zap.DebugLevel)
 	}
@@ -26,22 +25,45 @@ func Init(debug bool) *zap.SugaredLogger {
 	if err != nil {
 		panic(err)
 	}
-	zapLog = l.Sugar()
-	return zapLog
+	Log = otelzap.New(l, otelzap.WithTraceIDField(true), otelzap.WithMinLevel(zap.DebugLevel))
+	log = Log.Sugar()
+	return log
 }
 
-func Info(message string, fields ...interface{}) {
-	zapLog.Infof(message, fields...)
+type Logger interface {
+	Debugf(template string, args ...interface{})
+	Infof(template string, args ...interface{})
+	Warnf(template string, args ...interface{})
+	Errorf(template string, args ...interface{})
+	Fatalf(template string, args ...interface{})
 }
 
-func Debug(message string, fields ...interface{}) {
-	zapLog.Debugf(message, fields...)
+type Syncer interface {
+	Sync() error
 }
 
-func Error(message string, fields ...interface{}) {
-	zapLog.Errorf(message, fields...)
+func FromContext(ctx context.Context) Logger {
+	return log.Ctx(ctx)
 }
 
-func Fatal(message string, fields ...interface{}) {
-	zapLog.Fatalf(message, fields...)
+func Infof(message string, fields ...interface{}) {
+	log.Infof(message, fields...)
+}
+
+func Debugf(message string, fields ...interface{}) {
+	log.Debugf(message, fields...)
+}
+
+func Errorf(message string, fields ...interface{}) {
+	log.Errorf(message, fields...)
+}
+
+func Fatalf(message string, fields ...interface{}) {
+	log.Fatalf(message, fields...)
+}
+
+var log *otelzap.SugaredLogger
+
+func init() {
+	Init(false)
 }

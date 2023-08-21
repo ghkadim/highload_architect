@@ -1,59 +1,66 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/ghkadim/highload_architect/internal/cache"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+
+	"github.com/ghkadim/highload_architect/internal/app/cache"
+	"github.com/ghkadim/highload_architect/internal/app/controller/openapi"
+	"github.com/ghkadim/highload_architect/internal/app/controller/websocket"
+	dialogSvc "github.com/ghkadim/highload_architect/internal/app/dialog"
+	"github.com/ghkadim/highload_architect/internal/app/mysql"
+	"github.com/ghkadim/highload_architect/internal/app/rabbitmq"
+	"github.com/ghkadim/highload_architect/internal/app/service/dialog"
+	"github.com/ghkadim/highload_architect/internal/app/service/friend"
+	"github.com/ghkadim/highload_architect/internal/app/service/post"
+	"github.com/ghkadim/highload_architect/internal/app/service/user"
+	"github.com/ghkadim/highload_architect/internal/config"
+	"github.com/ghkadim/highload_architect/internal/dialog/tarantool"
 	"github.com/ghkadim/highload_architect/internal/logger"
-	"github.com/ghkadim/highload_architect/internal/models"
-	"github.com/ghkadim/highload_architect/internal/mysql"
-	"github.com/ghkadim/highload_architect/internal/rabbitmq"
 	"github.com/ghkadim/highload_architect/internal/server"
-	"github.com/ghkadim/highload_architect/internal/server/controller/openapi"
-	"github.com/ghkadim/highload_architect/internal/server/controller/websocket"
-	"github.com/ghkadim/highload_architect/internal/service/dialog"
-	"github.com/ghkadim/highload_architect/internal/service/friend"
-	"github.com/ghkadim/highload_architect/internal/service/post"
-	"github.com/ghkadim/highload_architect/internal/service/user"
 	"github.com/ghkadim/highload_architect/internal/session"
-	"github.com/ghkadim/highload_architect/internal/tarantool"
+	"github.com/ghkadim/highload_architect/internal/trace"
 )
 
 func main() {
-	l := logger.Init(getenv("DEBUG", false))
+	l := logger.Init(config.Get("DEBUG", false))
 	defer func() { _ = l.Sync() }()
 
-	logger.Info("Server starting")
+	logger.Infof("Server starting")
+	exporter := trace.NewJaegerExporter()
+	defer func() { _ = exporter.Shutdown(context.Background()) }()
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	storage, err := mysql.NewStorage(
-		getenv("DB_USER", "user"),
-		getenv("DB_PASSWORD", "password"),
-		getenv("DB_ADDRESS", "127.0.0.1:3306"),
-		getenv("DB_DATABASE", "db"),
-		getenv("DB_DEDICATED_SHARDS", make(mysql.DedicatedShardID)),
+		config.Get("DB_USER", "user"),
+		config.Get("DB_PASSWORD", "password"),
+		config.Get("DB_ADDRESS", "127.0.0.1:3306"),
+		config.Get("DB_DATABASE", "db"),
+		config.Get("DB_DEDICATED_SHARDS", make(mysql.DedicatedShardID)),
 	)
 	if err != nil {
-		logger.Fatal("failed to init db")
+		logger.Fatalf("failed to init db")
 	}
 
 	replicas := make([]mysql.Storage, 0)
-	for _, address := range strings.Split(getenv("DB_REPLICA_ADDRESSES", ""), ",") {
+	for _, address := range strings.Split(config.Get("DB_REPLICA_ADDRESSES", ""), ",") {
 		if address == "" {
 			continue
 		}
 		replica, err := mysql.NewStorage(
-			getenv("DB_USER", "user"),
-			getenv("DB_PASSWORD", "password"),
+			config.Get("DB_USER", "user"),
+			config.Get("DB_PASSWORD", "password"),
 			address,
-			getenv("DB_DATABASE", "db"),
-			getenv("DB_DEDICATED_SHARDS", make(mysql.DedicatedShardID)),
+			config.Get("DB_DATABASE", "db"),
+			config.Get("DB_DEDICATED_SHARDS", make(mysql.DedicatedShardID)),
 		)
 		if err != nil {
-			logger.Fatal("failed to init slave db")
+			logger.Fatalf("failed to init slave db")
 		}
 
 		replicas = append(replicas, replica)
@@ -64,66 +71,73 @@ func main() {
 	}
 
 	var cache_ cache.Cache
-	if getenv("CACHE_ENABLED", true) {
+	if config.Get("CACHE_ENABLED", true) {
 		cache_ = cache.NewCache(
-			getenv("CACHE_FEED_LIMIT", 1000),
+			config.Get("CACHE_FEED_LIMIT", 1000),
 			cache.NewLoadWithRetry(storage))
-		logger.Info("Feed cache enabled")
+		logger.Infof("Feed cache enabled")
 	} else {
 		cache_ = cache.NewDisabledCache()
-		logger.Info("Feed cache disabled")
+		logger.Infof("Feed cache disabled")
 	}
 
 	session_ := session.NewSession(
-		getenv("SESSION_KEY", "secret"),
+		config.Get("SESSION_KEY", "secret"),
 	)
 
 	var eventConsumer rabbitmq.Consumer
 	var eventPublisher rabbitmq.Publisher
 
-	if getenv("ASYNCAPI_ENABLED", true) {
+	if config.Get("ASYNCAPI_ENABLED", true) {
 		eventConsumer, err = rabbitmq.NewConsumer(
-			getenv("RMQ_USER", "guest"),
-			getenv("RMQ_PASSWORD", "guest"),
-			getenv("RMQ_ADDRESS", "localhost:5672"),
-			getenv("EVENT_CONSUMER_QUEUE_LEN", 1000),
+			config.Get("RMQ_USER", "guest"),
+			config.Get("RMQ_PASSWORD", "guest"),
+			config.Get("RMQ_ADDRESS", "localhost:5672"),
+			config.Get("EVENT_CONSUMER_QUEUE_LEN", 1000),
 		)
 		if err != nil {
-			logger.Fatal("Failed to create event consumer: %v", err)
+			logger.Fatalf("Failed to create event consumer: %v", err)
 		}
 
 		eventPublisher, err = rabbitmq.NewPublisher(
-			getenv("RMQ_USER", "guest"),
-			getenv("RMQ_PASSWORD", "guest"),
-			getenv("RMQ_ADDRESS", "localhost:5672"),
+			config.Get("RMQ_USER", "guest"),
+			config.Get("RMQ_PASSWORD", "guest"),
+			config.Get("RMQ_ADDRESS", "localhost:5672"),
 		)
 		if err != nil {
-			logger.Fatal("Failed to create event publisher: %v", err)
+			logger.Fatalf("Failed to create event publisher: %v", err)
 		}
 	} else {
 		eventConsumer = rabbitmq.NewNopConsumer()
 		eventPublisher = rabbitmq.NewNopPublisher()
 	}
 
-	var dialogSvc *dialog.Service
-	if getenv("IN_MEMORY_DIALOG_ENABLED", true) {
-		logger.Info("In memory dialogs enabled")
-		dialogSvc = dialog.NewService(
-			tarantool.NewStorage(
-				getenv("TARANTOOL_ADDRESS", ""),
-				http.Client{},
-			),
-		)
+	var dialogService dialog.Service
+	if config.Get("DIALOG_MICROSERVICE_ENABLED", false) {
+		dialogService, err = dialogSvc.NewClient(config.Get("DIALOG_ADDRESS", "localhost:8081"))
+		if err != nil {
+			logger.Fatalf("Failed to create client for dialog service: %v", err)
+		}
 	} else {
-		logger.Info("In memory dialogs disabled")
-		dialogSvc = dialog.NewService(storage)
+		if config.Get("IN_MEMORY_DIALOG_ENABLED", true) {
+			logger.Infof("In memory dialogs enabled")
+			dialogService = dialog.NewService(
+				tarantool.NewStorage(
+					config.Get("TARANTOOL_ADDRESS", ""),
+					http.Client{},
+				),
+			)
+		} else {
+			logger.Infof("In memory dialogs disabled")
+			dialogService = dialog.NewService(storage)
+		}
 	}
 
 	apiService := &svc{
 		userService:   user.NewService(storage, session_),
 		friendService: friend.NewService(storage, cache_, eventPublisher),
 		postService:   post.NewService(storage, cache_, eventPublisher, eventConsumer),
-		dialogService: dialogSvc,
+		dialogService: dialogService,
 	}
 
 	routers := []server.Router{
@@ -131,65 +145,24 @@ func main() {
 			openapi.NewController(apiService, session_)),
 	}
 
-	if getenv("ASYNCAPI_ENABLED", true) {
-		logger.Info("Async API enabled")
+	if config.Get("ASYNCAPI_ENABLED", true) {
+		logger.Infof("Async API enabled")
 		routers = append(routers, websocket.NewRouter(
 			websocket.NewController(apiService, session_)))
 	}
 
-	apiController := server.NewServer(routers...)
-
-	log.Fatal(http.ListenAndServe(":8080", apiController))
+	srv := server.NewServer(routers...)
+	srv.ListenAndServe(":8080")
 }
 
-type userService = user.Service
-type friendService = friend.Service
-type postService = post.Service
+type userService = *user.Service
+type friendService = *friend.Service
+type postService = *post.Service
 type dialogService = dialog.Service
 
 type svc struct {
-	*userService
-	*friendService
-	*postService
-	*dialogService
-}
-
-func getenv[T any](variable string, defaultValue T) T {
-	valueStr := os.Getenv(variable)
-	if valueStr == "" {
-		return defaultValue
-	}
-
-	var value T
-	err := parseValue(valueStr, &value)
-	if err != nil {
-		logger.Info("Failed to parse env variable %s, return defaultValue %v: %v",
-			variable, defaultValue, err)
-		return defaultValue
-	}
-	return value
-}
-
-func parseValue(valueStr string, value any) error {
-	switch val := value.(type) {
-	case *mysql.DedicatedShardID:
-		for _, kv := range strings.Split(valueStr, ",") {
-			kvArr := strings.Split(kv, ":")
-			if len(kvArr) != 2 {
-				return fmt.Errorf("failed to parse key value %s", kv)
-			}
-			var userID models.UserID
-			err := parseValue(kvArr[0], &userID)
-			if err != nil {
-				return err
-			}
-			(*val)[userID] = kvArr[1]
-		}
-	default:
-		_, err := fmt.Sscan(valueStr, val)
-		if err != nil {
-			return fmt.Errorf("failed to parse value '%s' to type %T: %w", valueStr, value, err)
-		}
-	}
-	return nil
+	userService
+	friendService
+	postService
+	dialogService
 }

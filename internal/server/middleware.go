@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	openapi "github.com/ghkadim/highload_architect/generated/go_server/go"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
 	log "github.com/ghkadim/highload_architect/internal/logger"
 	"github.com/ghkadim/highload_architect/internal/models"
 )
@@ -15,10 +16,7 @@ func authorize(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		auth := strings.Trim(r.Header.Get("Authorization"), " ")
 		if len(auth) == 0 || !strings.HasPrefix(auth, "Bearer ") {
-			err := openapi.EncodeJSONResponse(nil, func(i int) *int { return &i }(http.StatusUnauthorized), w)
-			if err != nil {
-				log.Error("Failed to encode Json response: %v", err)
-			}
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
@@ -47,7 +45,7 @@ func logger(inner http.Handler) http.Handler {
 
 		inner.ServeHTTP(writer, r)
 
-		log.Debug(
+		log.FromContext(r.Context()).Debugf(
 			"%s %s %d %s",
 			r.Method,
 			r.RequestURI,
@@ -55,4 +53,8 @@ func logger(inner http.Handler) http.Handler {
 			time.Since(start),
 		)
 	})
+}
+
+func trace(inner http.Handler, name string) http.Handler {
+	return otelhttp.NewHandler(inner, name)
 }

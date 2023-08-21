@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package dialog;
+
+option go_package = "github.com/ghkadim/highload_architect/generated/dialog/go_proto";
+
+service DialogService {
+  rpc Send(SendRequest) returns (SendReply) {}
+  rpc List(ListRequest) returns (ListReply) {}
+}
+
+message DialogMessage {
+  string fromUser = 1;
+  string toUser = 2;
+  string text = 3;
+}
+
+message SendRequest {
+  DialogMessage message = 1;
+}
+
+message SendReply {}
+
+message ListRequest {
+  string fromUser = 1;
+  string toUser = 2;
+}
+
+message ListReply {
+  repeated DialogMessage messages = 1;
+}
