@@ -60,6 +60,13 @@ compose_test: compose_build
 		-f docker-compose_test.yml \
 		up --abort-on-container-exit --exit-code-from test
 
+
+	echo Test HA setup
+	docker-compose -f docker-compose.yml \
+		-f docker-compose_ha.yml \
+		-f docker-compose_test.yml \
+		up --abort-on-container-exit --exit-code-from test
+
 #	echo Test dialogs in mysql
 #	IN_MEMORY_DIALOG_ENABLED=false \
 #	docker-compose -f docker-compose.yml \

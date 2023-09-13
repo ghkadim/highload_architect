@@ -1,0 +1,44 @@
+version: '3.3'
+services:
+  db:
+    image: haproxy:2.8
+    volumes:
+      - "${PWD}/db/ha/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+    ports:
+      - "3306:3306"
+      - "9999:9999"
+  db_1:
+    image: mysql:8.0
+    restart: no
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3307:3306'
+    expose:
+      - '3307'
+    volumes:
+      - my-db_1:/var/lib/mysql
+      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ${PWD}/db/ha/mysql_1.cnf:/etc/mysql/conf.d/mysql.cnf
+  db_2:
+    image: mysql:8.0
+    restart: no
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3308:3306'
+    expose:
+      - '3308'
+    volumes:
+      - my-db_2:/var/lib/mysql
+      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ${PWD}/db/ha/mysql_2.cnf:/etc/mysql/conf.d/mysql.cnf
+volumes:
+  my-db_1:
+  my-db_2:
