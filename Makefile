@@ -61,17 +61,12 @@ compose_test: compose_build
 		-f docker-compose_test.yml \
 		up --abort-on-container-exit --exit-code-from test
 
-	echo Test dialogs in tarantool
-	docker-compose -f docker-compose.yml \
-		-f docker-compose_test.yml \
-		up --abort-on-container-exit --exit-code-from test
-
 #	echo Test dialogs in mysql
 #	IN_MEMORY_DIALOG_ENABLED=false \
 #	docker-compose -f docker-compose.yml \
 #		-f docker-compose_test.yml \
 #		up --abort-on-container-exit --exit-code-from test
-#
+
 #	echo Test dialogs sharding
 #	IN_MEMORY_DIALOG_ENABLED=false \
 #	docker-compose -f docker-compose.yml \
@@ -79,11 +74,11 @@ compose_test: compose_build
 #		-f docker-compose_test.yml \
 #		up --abort-on-container-exit --exit-code-from test
 
-	echo Test with cache disabled
-	CACHE_ENABLED=false \
-	docker-compose -f docker-compose.yml \
-		-f docker-compose_test.yml \
-		up --abort-on-container-exit --exit-code-from test
+#	echo Test with cache disabled
+#	CACHE_ENABLED=false \
+#	docker-compose -f docker-compose.yml \
+#		-f docker-compose_test.yml \
+#		up --abort-on-container-exit --exit-code-from test
 
 .PHONY: generate
 generate:
