@@ -3,6 +3,9 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"os"
+	"strconv"
 	"sync"
 
 	"github.com/wagslane/go-rabbitmq"
@@ -11,6 +14,14 @@ import (
 	"github.com/ghkadim/highload_architect/internal/result"
 	"github.com/ghkadim/highload_architect/internal/utils/closer"
 )
+
+var nodeID = func() string {
+	hostname := os.Getenv("HOSTNAME")
+	if hostname != "" {
+		return hostname
+	}
+	return strconv.FormatInt(rand.Int63(), 16)
+}()
 
 type queueConsumer[T any] struct {
 	mtx               sync.Mutex
@@ -78,7 +89,7 @@ func (c *queueConsumer[T]) Consume(routingKey string, outCh chan<- result.Result
 func (c *queueConsumer[T]) startConsumer(
 	routingKey string,
 ) (closer.Closer, error) {
-	queueName := fmt.Sprintf("%s.%s", c.queueNamePrefix, routingKey)
+	queueName := fmt.Sprintf("%s.%s.%s", c.queueNamePrefix, routingKey, nodeID)
 	logger.Debugf("Starting RMQ consumer queue=%s exchange=%s", queueName, c.exchangeName)
 	cons, err := rabbitmq.NewConsumer(
 		c.conn,

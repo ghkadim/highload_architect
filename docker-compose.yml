@@ -1,15 +1,25 @@
 version: '3.3'
 services:
+  app_proxy:
+    image: nginx:1.25.2-alpine
+    volumes:
+      - ${PWD}/nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    deploy:
+      replicas: 2
     environment:
       DB_DATABASE: 'db'
       DB_USER: 'user'
       DB_PASSWORD: 'password'
       DB_ADDRESS: 'db:3306'
-      CACHE_ENABLED: ${CACHE_ENABLED:-true}
+      CACHE_ENABLED: ${CACHE_ENABLED:-false}
       DEBUG: ${DEBUG:-false}
       CACHE_FEED_LIMIT: '1000'
       ASYNCAPI_ENABLED: 'true'
@@ -19,14 +29,10 @@ services:
       OTEL_SERVICE_NAME: 'app'
       OTEL_EXPORTER_JAEGER_ENDPOINT: 'http://jaeger:14268/api/traces'
     depends_on:
-      db:
+      db_proxy:
         condition: service_started
       rabbitmq:
         condition: service_healthy
-#    ports:
-#      - '8080:8080'
-#    expose:
-#      - '8080'
   dialog:
     build:
       context: .
@@ -47,7 +53,28 @@ services:
     expose:
       - '8081'
       - '8180'
-  db:
+  db_proxy:
+    image: haproxy:2.8
+    hostname: "db"
+    volumes:
+      - "${PWD}/db/ha/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+    ports:
+      - "3306:3306"
+      - "9999:9999"
+    depends_on:
+      - db_init
+  db_init:
+    image: mysql:8.0
+    restart: "no"
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+    entrypoint: [ "bash", "-c", "./replication_init.sh || exit 1; sleep infinity"]
+    volumes:
+      - ${PWD}/db/ha/replication_init.sh:/replication_init.sh
+    depends_on:
+      - db_1
+      - db_2
+  db_1:
     image: mysql:8.0
     restart: always
     environment:
@@ -56,13 +83,29 @@ services:
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
     ports:
-      - '3306:3306'
+      - '3307:3306'
     expose:
-      - '3306'
+      - '3307'
     volumes:
-      - my-db:/var/lib/mysql
+      - my-db_1:/var/lib/mysql
       - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ${PWD}/db/single/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+      - ${PWD}/db/ha/mysql_1.cnf:/etc/mysql/conf.d/mysql.cnf
+  db_2:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3308:3306'
+    expose:
+      - '3308'
+    volumes:
+      - my-db_2:/var/lib/mysql
+      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ${PWD}/db/ha/mysql_2.cnf:/etc/mysql/conf.d/mysql.cnf
   rabbitmq:
     image: rabbitmq:3.12-management
     ports:
@@ -96,5 +139,6 @@ services:
       - '14268:14268'
       - '9411:9411'
 volumes:
-  my-db:
+  my-db_1:
+  my-db_2:
   tarantool-db:

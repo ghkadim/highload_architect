@@ -66,7 +66,7 @@ func NewStorage(
 	if err != nil {
 		return nil, err
 	}
-	db.SetConnMaxLifetime(30 * time.Second)
+	db.SetConnMaxLifetime(10 * time.Second)
 
 	dialogsIDGenerator, err := snowflake.NewNode(1)
 	if err != nil {
