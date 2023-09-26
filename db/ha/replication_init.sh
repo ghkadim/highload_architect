@@ -18,6 +18,7 @@ mysql_exec () {
   db_num=$(($# - 1))
   query=${@: -1}
   for db in ${*: 1: ${db_num}}; do
+    >&2 echo "${db}> ${query}"
     mysql -h "${db}" --user=root --password="${MYSQL_ROOT_PASSWORD:-password}" -e "${query}";
   done
 }
@@ -28,46 +29,40 @@ for replica in "${REPLICAS[@]}"; do
     sleep 5
   done
 
-  replication_status=$(mysql_exec "${replica}" "show replica status")
+  replication_status=$(mysql_exec "${replica}" "SELECT * FROM performance_schema.replication_group_members WHERE member_host <> NULL")
   if [[ -n "${replication_status}" ]]; then
-    echo "Replication already started"
+    echo "Replication already started:"
+    echo "${replication_status}"
     exit 0
   fi
 done
 
+
 echo "creating replica user"
-REPLICATION_USER="replica"
-REPLICATION_PASSWORD="replica"
+mysql_exec db_1 "SET SQL_LOG_BIN=0;"
+mysql_exec db_1 "CREATE USER rpl_user@'%' IDENTIFIED BY 'password';"
+mysql_exec db_1 "GRANT REPLICATION SLAVE ON *.* TO rpl_user@'%';"
+mysql_exec db_1 "GRANT CONNECTION_ADMIN ON *.* TO rpl_user@'%';"
+mysql_exec db_1 "GRANT BACKUP_ADMIN ON *.* TO rpl_user@'%';"
+mysql_exec db_1 "GRANT GROUP_REPLICATION_STREAM ON *.* TO rpl_user@'%';"
+mysql_exec db_1 "CREATE USER 'haproxy_check'@'%';"
+mysql_exec db_1 "FLUSH PRIVILEGES;"
+mysql_exec db_1 "SET SQL_LOG_BIN=1;"
 
-for replica in "${REPLICAS[@]}"; do
-  mysql_exec "${replica}" \
-    "CREATE USER '$REPLICATION_USER'@'%' IDENTIFIED WITH mysql_native_password BY '$REPLICATION_PASSWORD';"
-  mysql_exec "${replica}" \
-    "GRANT REPLICATION SLAVE ON *.* TO '$REPLICATION_USER'@'%';"
-  mysql_exec "${replica}" "CREATE USER 'haproxy_check'@'%';"
-  mysql_exec "${replica}" "FLUSH PRIVILEGES;"
-done
+echo "configure replication source"
+mysql_exec db_1 db_2 db_3 "CHANGE REPLICATION SOURCE TO SOURCE_USER='rpl_user', SOURCE_PASSWORD='password' FOR CHANNEL 'group_replication_recovery';"
 
-for replica_src in "${REPLICA_SOURCES[@]}"; do
-  REPLICA_DB="${replica_src%%:*}"
-  SOURCE_DB="${replica_src##*:}"
-  echo "replica: ${REPLICA_DB}, source: ${SOURCE_DB}"
-  echo "getting Source File and Position"
-  SOURCE_FILE="$(mysql_exec "${SOURCE_DB}" 'show master status \G' | grep File | sed -n -e 's/^.*: //p')"
-  SOURCE_POSITION="$(mysql_exec "${SOURCE_DB}" 'show master status \G' | grep Position | grep -Eo '[0-9]{1,}')"
+echo "bootstrapping"
+mysql_exec db_1 "SET GLOBAL group_replication_bootstrap_group=ON;"
+mysql_exec db_1 "START GROUP_REPLICATION USER='rpl_user', PASSWORD='password';"
+mysql_exec db_1 "SET GLOBAL group_replication_bootstrap_group=OFF;"
 
-  echo "init replica server for connecting to the master server"
-  mysql_exec "${REPLICA_DB}" \
-    "CHANGE REPLICATION SOURCE TO \
-    SOURCE_HOST = '${SOURCE_DB}', \
-    SOURCE_PORT = 3306, \
-    SOURCE_USER = '${REPLICATION_USER}', \
-    SOURCE_PASSWORD = '${REPLICATION_PASSWORD}', \
-    SOURCE_LOG_FILE = '${SOURCE_FILE}', \
-    SOURCE_LOG_POS = ${SOURCE_POSITION};"
-done
+mysql_exec db_2 db_3 "START GROUP_REPLICATION USER='rpl_user', PASSWORD='password';"
 
-for replica in "${REPLICAS[@]}"; do
-  mysql_exec "${replica}" "show replica status \G"
-  mysql_exec "${replica}" "start replica";
+mysql_exec db_1 "SELECT * FROM performance_schema.replication_group_members;"
+
+echo "creating schema"
+for f in /docker-entrypoint-initdb.d/* ; do
+  schema=$(cat "${f}")
+  mysql -h db_1 --user=root --password="${MYSQL_ROOT_PASSWORD:-password}" -D db -e "${schema}";
 done

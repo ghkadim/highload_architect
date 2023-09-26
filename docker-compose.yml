@@ -71,9 +71,11 @@ services:
     entrypoint: [ "bash", "-c", "./replication_init.sh || exit 1; sleep infinity"]
     volumes:
       - ${PWD}/db/ha/replication_init.sh:/replication_init.sh
+      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
     depends_on:
       - db_1
       - db_2
+      - db_3
   db_1:
     image: mysql:8.0
     restart: always
@@ -82,14 +84,18 @@ services:
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
+    command:
+      - bash
+      - -c
+      - 'chown -R mysql:mysql /etc/mysql/conf.d && docker-entrypoint.sh mysqld'
     ports:
       - '3307:3306'
     expose:
       - '3307'
     volumes:
       - my-db_1:/var/lib/mysql
-      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ${PWD}/db/ha/mysql_1.cnf:/etc/mysql/conf.d/mysql.cnf
+      - ${PWD}/db/ha/mysql_1.cnf:/mysql_ha.cnf
+      - ${PWD}/db/ha/init.sh:/docker-entrypoint-initdb.d/init.sh
   db_2:
     image: mysql:8.0
     restart: always
@@ -98,14 +104,38 @@ services:
       MYSQL_USER: 'user'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
+    command:
+      - bash
+      - -c
+      - 'chown -R mysql:mysql /etc/mysql/conf.d && docker-entrypoint.sh mysqld'
     ports:
       - '3308:3306'
     expose:
       - '3308'
     volumes:
       - my-db_2:/var/lib/mysql
-      - ${PWD}/db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ${PWD}/db/ha/mysql_2.cnf:/etc/mysql/conf.d/mysql.cnf
+      - ${PWD}/db/ha/mysql_2.cnf:/mysql_ha.cnf
+      - ${PWD}/db/ha/init.sh:/docker-entrypoint-initdb.d/init.sh
+  db_3:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    command:
+      - bash
+      - -c
+      - 'chown -R mysql:mysql /etc/mysql/conf.d && docker-entrypoint.sh mysqld'
+    ports:
+      - '3309:3306'
+    expose:
+      - '3309'
+    volumes:
+      - my-db_3:/var/lib/mysql
+      - ${PWD}/db/ha/mysql_3.cnf:/mysql_ha.cnf
+      - ${PWD}/db/ha/init.sh:/docker-entrypoint-initdb.d/init.sh
   rabbitmq:
     image: rabbitmq:3.12-management
     ports:
@@ -141,4 +171,5 @@ services:
 volumes:
   my-db_1:
   my-db_2:
+  my-db_3:
   tarantool-db:
