@@ -1,0 +1,130 @@
+highload_architect-db_1-1 exited with code 137
+highload_architect-db_3-1       | 2023-09-26T18:48:58.525948Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_2-1       | 2023-09-26T18:48:58.525966Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_3-1       | 2023-09-26T18:48:58.642808Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-app-1        | [mysql] 2023/09/26 18:48:58 packets.go:37: unexpected EOF
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:48:58.834Z","caller":"go/api_default.go:245","msg":"postAdd: invalid connection"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:48:58 +0000] "POST /post/create HTTP/1.1" 500 30 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | [mysql] 2023/09/26 18:48:58 packets.go:37: unexpected EOF
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:48:58.836Z","caller":"go/api_default.go:362","msg":"userRegister: invalid connection"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:48:58 +0000] "POST /user/register HTTP/1.1" 500 35 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | [mysql] 2023/09/26 18:48:59 packets.go:37: unexpected EOF
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:48:59.024Z","caller":"go/api_default.go:245","msg":"postAdd: invalid connection"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:48:59 +0000] "POST /post/create HTTP/1.1" 500 30 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-db_2-1       | 2023-09-26T18:48:59.646091Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_3-1       | 2023-09-26T18:48:59.754067Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_2-1       | 2023-09-26T18:49:01.763892Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_3-1       | 2023-09-26T18:49:01.860990Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-app-1        | [mysql] 2023/09/26 18:49:02 packets.go:37: unexpected EOF
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:49:02.051Z","caller":"go/api_default.go:245","msg":"postAdd: invalid connection"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:02 +0000] "POST /post/create HTTP/1.1" 500 30 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-db_3-1       | 2023-09-26T18:49:04.057261Z 0 [Warning] [MY-011493] [Repl] Plugin group_replication reported: 'Member with address 287a706db728:3306 has become
+unreachable.'
+highload_architect-db_2-1       | 2023-09-26T18:49:04.142253Z 0 [Warning] [MY-011493] [Repl] Plugin group_replication reported: 'Member with address 287a706db728:3306 has become
+unreachable.'
+highload_architect-db_2-1       | 2023-09-26T18:49:04.885563Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_3-1       | 2023-09-26T18:49:04.981814Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_2-1       | 2023-09-26T18:49:08.999452Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_3-1       | 2023-09-26T18:49:09.101494Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-app-1        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-db_proxy-1   | [WARNING]  (7) : Server mysql-cluster/mysql-1 is DOWN, reason: Layer4 timeout, check duration: 2002ms. 0 active and 2 backup servers left. Runni
+ng on backup. 15 sessions active, 0 requeued, 0 remaining in queue.
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-1        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-1        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-1        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-1        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-2        | [mysql] 2023/09/26 18:49:09 packets.go:37: unexpected EOF
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:49:09.327Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.335Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:49:09.337Z","caller":"go/api_default.go:323","msg":"postUpdate: Error 1290 (HY000): The MySQL server is run
+ning with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "PUT /post/update HTTP/1.1" 500 126 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.338Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:49:09.339Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:49:09.343Z","caller":"go/api_default.go:260","msg":"postDelete: Error 1290 (HY000): The MySQL server is run
+ning with the --read-only option so it cannot execute this statement"}
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:49:09.344Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "PUT /post/delete/10 HTTP/1.1" 500 126 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.350Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.350Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.351Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.352Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.354Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.355Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.356Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.359Z","caller":"go/api_default.go:260","msg":"postDelete: Error 1290 (HY000): The MySQL server is run
+ning with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "PUT /post/delete/6 HTTP/1.1" 500 126 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"error","ts":"2023-09-26T18:49:09.364Z","caller":"go/api_default.go:260","msg":"postDelete: Error 1290 (HY000): The MySQL server is run
+ning with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:09 +0000] "PUT /post/delete/7 HTTP/1.1" 500 126 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:49:09.881Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app-1        | {"level":"error","ts":"2023-09-26T18:49:20.101Z","caller":"go/api_default.go:245","msg":"postAdd: Error 1290 (HY000): The MySQL server is runnin
+g with the --read-only option so it cannot execute this statement"}
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:20 +0000] "POST /post/create HTTP/1.1" 500 123 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-db_2-1       | 2023-09-26T18:49:20.151136Z 0 [Warning] [MY-011499] [Repl] Plugin group_replication reported: 'Members removed from the group: 287a706db728:3306
+'
+highload_architect-db_2-1       | 2023-09-26T18:49:20.151184Z 0 [System] [MY-011500] [Repl] Plugin group_replication reported: 'Primary server with address 287a706db728:3306 left
+ the group. Electing new Primary.'
+highload_architect-db_2-1       | 2023-09-26T18:49:20.151968Z 0 [System] [MY-011507] [Repl] Plugin group_replication reported: 'A new primary with address 75539bb15cf2:3306 was e
+lected. The new primary will execute all previous group transactions before allowing writes.'
+highload_architect-db_2-1       | 2023-09-26T18:49:20.152727Z 0 [System] [MY-011503] [Repl] Plugin group_replication reported: 'Group membership changed to 75539bb15cf2:3306, d49
+f96bbfa79:3306 on view 16957538641436218:4.'
+highload_architect-db_3-1       | 2023-09-26T18:49:20.151346Z 0 [Warning] [MY-011499] [Repl] Plugin group_replication reported: 'Members removed from the group: 287a706db728:3306
+'
+highload_architect-db_3-1       | 2023-09-26T18:49:20.151506Z 0 [System] [MY-011500] [Repl] Plugin group_replication reported: 'Primary server with address 287a706db728:3306 left
+ the group. Electing new Primary.'
+highload_architect-db_3-1       | 2023-09-26T18:49:20.151828Z 0 [System] [MY-011507] [Repl] Plugin group_replication reported: 'A new primary with address 75539bb15cf2:3306 was e
+lected. The new primary will execute all previous group transactions before allowing writes.'
+highload_architect-db_3-1       | 2023-09-26T18:49:20.153040Z 0 [System] [MY-011503] [Repl] Plugin group_replication reported: 'Group membership changed to 75539bb15cf2:3306, d49
+f96bbfa79:3306 on view 16957538641436218:4.'
+highload_architect-db_2-1       | 2023-09-26T18:49:20.156797Z 24 [System] [MY-013731] [Repl] Plugin group_replication reported: 'The member action "mysql_disable_super_read_only_
+if_primary" for event "AFTER_PRIMARY_ELECTION" with priority "1" will be run.'
+highload_architect-db_2-1       | 2023-09-26T18:49:20.157354Z 24 [System] [MY-011566] [Repl] Plugin group_replication reported: 'Setting super_read_only=OFF.'
+highload_architect-db_2-1       | 2023-09-26T18:49:20.157451Z 24 [System] [MY-013731] [Repl] Plugin group_replication reported: 'The member action "mysql_start_failover_channels_
+if_primary" for event "AFTER_PRIMARY_ELECTION" with priority "10" will be run.'
+highload_architect-db_3-1       | 2023-09-26T18:49:20.156937Z 185 [System] [MY-011511] [Repl] Plugin group_replication reported: 'This server is working as secondary member with
+primary member address 75539bb15cf2:3306.'
+highload_architect-db_2-1       | 2023-09-26T18:49:20.159700Z 207 [System] [MY-011510] [Repl] Plugin group_replication reported: 'This server is working as primary member.'
+highload_architect-db_2-1       | 2023-09-26T18:49:20.231961Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-db_3-1       | 2023-09-26T18:49:20.334730Z 0 [ERROR] [MY-011735] [Repl] Plugin group_replication reported: '[GCS] Error retrieving server information.'
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:20 +0000] "POST /post/create HTTP/1.1" 200 5 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:21 +0000] "PUT /post/update HTTP/1.1" 200 0 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:21 +0000] "POST /post/create HTTP/1.1" 200 5 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:22 +0000] "PUT /post/update HTTP/1.1" 200 0 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app_proxy-1  | 192.168.80.1 - - [26/Sep/2023:18:49:22 +0000] "PUT /post/delete/27 HTTP/1.1" 200 0 "-" "OpenAPI-Generator/1.0.0/python"

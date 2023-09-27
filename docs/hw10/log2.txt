@@ -1,0 +1,39 @@
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:32 +0000] "POST /post/create HTTP/1.1" 200 5 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"debug","ts":"2023-09-26T19:40:33.320Z","caller":"http/server.go:2122","msg":"POST /user/register 200 92.577626ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:33 +0000] "POST /user/register HTTP/1.1" 200 17 "-" "OpenAPI-Generator/1.0.0/python"                        highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:33.417Z","caller":"http/server.go:2122","msg":"POST /login 200 91.066662ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:33 +0000] "POST /login HTTP/1.1" 200 133 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:33.513Z","caller":"http/server.go:2122","msg":"POST /user/register 200 88.258515ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:33 +0000] "POST /user/register HTTP/1.1" 200 17 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:33.596Z","caller":"http/server.go:2122","msg":"POST /login 200 78.421629ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:33 +0000] "POST /login HTTP/1.1" 200 133 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"debug","ts":"2023-09-26T19:40:34.326Z","caller":"http/server.go:2122","msg":"POST /user/register 200 97.032969ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:34 +0000] "POST /user/register HTTP/1.1" 200 17 "-" "OpenAPI-Generator/1.0.0/python"                        highload_architect-app-2        | {"level":"debug","ts":"2023-09-26T19:40:34.413Z","caller":"http/server.go:2122","msg":"POST /login 200 81.058712ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:34 +0000] "POST /login HTTP/1.1" 200 133 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:34.426Z","caller":"rabbitmq/publisher.go:94","msg":"RMQ_PUBLISH exchange=postAdded RK=93 {\"id\":\"48\",
+\"text\":\"hello\",\"authorId\":\"93\"}"}
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:34.426Z","caller":"http/server.go:2122","msg":"POST /post/create 200 6.287331ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:34 +0000] "POST /post/create HTTP/1.1" 200 5 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-2        | {"level":"debug","ts":"2023-09-26T19:40:34.506Z","caller":"http/server.go:2122","msg":"POST /user/register 200 84.962208ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:34 +0000] "POST /user/register HTTP/1.1" 200 17 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:34.589Z","caller":"http/server.go:2122","msg":"POST /login 200 78.573816ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:34 +0000] "POST /login HTTP/1.1" 200 133 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:34.599Z","caller":"rabbitmq/publisher.go:94","msg":"RMQ_PUBLISH exchange=postAdded RK=94 {\"id\":\"49\",
+\"text\":\"hello\",\"authorId\":\"94\"}"}                                                                                                                                         highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:34.599Z","caller":"http/server.go:2122","msg":"POST /post/create 200 4.538153ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:34 +0000] "POST /post/create HTTP/1.1" 200 5 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-rabbitmq-1   | 2023-09-26 19:40:34.811988+00:00 [warning] <0.779.0> closing AMQP connection <0.779.0> (192.168.96.12:58886 -> 192.168.96.6:5672, vhost: '/', us
+er: 'guest'):
+highload_architect-rabbitmq-1   | 2023-09-26 19:40:34.811988+00:00 [warning] <0.779.0> client unexpectedly closed TCP connection
+highload_architect-rabbitmq-1   | 2023-09-26 19:40:34.812318+00:00 [warning] <0.771.0> closing AMQP connection <0.771.0> (192.168.96.12:58878 -> 192.168.96.6:5672, vhost: '/', us
+er: 'guest'):
+highload_architect-rabbitmq-1   | 2023-09-26 19:40:34.812318+00:00 [warning] <0.771.0> client unexpectedly closed TCP connection
+highload_architect-app-2 exited with code 137                                                                                                                                     highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:35.322Z","caller":"http/server.go:2122","msg":"POST /user/register 200 88.063411ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:35 +0000] "POST /user/register HTTP/1.1" 200 17 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:35.441Z","caller":"http/server.go:2122","msg":"POST /login 200 113.881173ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:35 +0000] "POST /login HTTP/1.1" 200 133 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:35.548Z","caller":"http/server.go:2122","msg":"POST /user/register 200 95.082092ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:35 +0000] "POST /user/register HTTP/1.1" 200 17 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:35.643Z","caller":"http/server.go:2122","msg":"POST /login 200 90.374155ms"}                            highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:35 +0000] "POST /login HTTP/1.1" 200 133 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:36.337Z","caller":"http/server.go:2122","msg":"POST /user/register 200 99.064235ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:36 +0000] "POST /user/register HTTP/1.1" 200 17 "-" "OpenAPI-Generator/1.0.0/python"
+highload_architect-app-1        | {"level":"debug","ts":"2023-09-26T19:40:36.429Z","caller":"http/server.go:2122","msg":"POST /login 200 84.590603ms"}
+highload_architect-app_proxy-1  | 192.168.96.1 - - [26/Sep/2023:19:40:36 +0000] "POST /login HTTP/1.1" 200 133 "-" "OpenAPI-Generator/1.0.0/python"

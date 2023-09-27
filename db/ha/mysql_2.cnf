@@ -1,0 +1,21 @@
+[mysqld]
+server_id = 2
+disabled_storage_engines="MyISAM,BLACKHOLE,FEDERATED,ARCHIVE,MEMORY"
+gtid_mode=ON
+enforce_gtid_consistency=ON
+binlog_checksum=NONE
+log_bin=binlog
+log_slave_updates=ON
+binlog_format=ROW
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+transaction_write_set_extraction=XXHASH64
+
+plugin_load_add='group_replication.so'
+group_replication_group_name="8adfcc50-71b5-49f4-9722-09feb99e32d0"
+group_replication_start_on_boot=off
+group_replication_local_address= "db_2:33061"
+group_replication_group_seeds= "db_1:33061,db_2:33061,db_3:33061"
+group_replication_bootstrap_group=off
+
+default-authentication-plugin=mysql_native_password
