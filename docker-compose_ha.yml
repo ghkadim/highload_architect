@@ -156,7 +156,7 @@ services:
     expose:
       - '3380'
     volumes:
-      - tarantool-db:/var/lib/tarantool
+      - tarantool-db-ha:/var/lib/tarantool
       - ${PWD}/tarantool/src:/opt/tarantool
   jaeger:
     image: jaegertracing/all-in-one:1.6
@@ -172,4 +172,4 @@ volumes:
   my-db_1:
   my-db_2:
   my-db_3:
-  tarantool-db:
+  tarantool-db-ha:
