@@ -55,8 +55,12 @@ compose_clean:
 
 .PHONY: compose_test
 compose_test: compose_build
-	echo Test HA setup
 	docker-compose -f docker-compose.yml \
+		-f docker-compose_test.yml \
+		up --abort-on-container-exit --exit-code-from test
+
+	echo Test HA setup
+	docker-compose -f docker-compose_ha.yml \
 		-f docker-compose_test.yml \
 		up --abort-on-container-exit --exit-code-from test
 
