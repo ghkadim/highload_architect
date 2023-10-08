@@ -21,6 +21,7 @@ import (
 // pass the data to a DefaultApiServicer to perform the required actions, then write the service results to the http response.
 type DefaultApiRouter interface { 
 	DialogUserIdListGet(http.ResponseWriter, *http.Request)
+	DialogUserIdMessageMessageIdReadPut(http.ResponseWriter, *http.Request)
 	DialogUserIdSendPost(http.ResponseWriter, *http.Request)
 }
 
@@ -31,5 +32,6 @@ type DefaultApiRouter interface {
 // and updated with the logic required for the API.
 type DefaultApiServicer interface { 
 	DialogUserIdListGet(context.Context, string) (ImplResponse, error)
+	DialogUserIdMessageMessageIdReadPut(context.Context, string, string) (ImplResponse, error)
 	DialogUserIdSendPost(context.Context, string, DialogUserIdSendPostRequest) (ImplResponse, error)
 }

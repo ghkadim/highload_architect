@@ -11,6 +11,9 @@ package openapi
 
 type DialogMessage struct {
 
+	// Идентификатор сообщения
+	Id string `json:"id,omitempty"`
+
 	// Идентификатор пользователя
 	From string `json:"from"`
 
@@ -19,6 +22,9 @@ type DialogMessage struct {
 
 	// Текст сообщения
 	Text string `json:"text"`
+
+	// Сообщение прочитано
+	Read bool `json:"read,omitempty"`
 }
 
 // AssertDialogMessageRequired checks if the required fields are not zero-ed

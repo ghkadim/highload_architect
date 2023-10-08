@@ -57,6 +57,12 @@ func (c *DefaultApiController) Routes() Routes {
 			c.DialogUserIdListGet,
 		},
 		{
+			"DialogUserIdMessageMessageIdReadPut",
+			strings.ToUpper("Put"),
+			"/dialog/{user_id}/message/{message_id}/read",
+			c.DialogUserIdMessageMessageIdReadPut,
+		},
+		{
 			"DialogUserIdSendPost",
 			strings.ToUpper("Post"),
 			"/dialog/{user_id}/send",
@@ -70,6 +76,22 @@ func (c *DefaultApiController) DialogUserIdListGet(w http.ResponseWriter, r *htt
 	params := mux.Vars(r)
 	userIdParam := params["user_id"]
 	result, err := c.service.DialogUserIdListGet(r.Context(), userIdParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// DialogUserIdMessageMessageIdReadPut - 
+func (c *DefaultApiController) DialogUserIdMessageMessageIdReadPut(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	userIdParam := params["user_id"]
+	messageIdParam := params["message_id"]
+	result, err := c.service.DialogUserIdMessageMessageIdReadPut(r.Context(), userIdParam, messageIdParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

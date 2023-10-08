@@ -17,6 +17,8 @@ type session interface {
 	ParseToken(ctx context.Context, tokenStr string) (models.UserID, error)
 }
 
+var _ openapi.DefaultApiServicer = &apiController{}
+
 type apiController struct {
 	service service
 	session session
@@ -79,6 +81,14 @@ func (c *apiController) DialogUserIdSendPost(
 		return errorResponse(err)
 	}
 	return successResponse(nil)
+}
+
+func (c *apiController) DialogUserIdMessageMessageIdReadPut(
+	ctx context.Context,
+	userId string,
+	messageId string,
+) (openapi.ImplResponse, error) {
+	return openapi.ImplResponse{}, nil
 }
 
 func errorResponse(err error) (openapi.ImplResponse, error) {

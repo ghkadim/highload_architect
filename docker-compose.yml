@@ -76,7 +76,7 @@ services:
     expose:
       - '5672'
   tarantool:
-    image: tarantool/tarantool:2.3.1
+    image: tarantool/tarantool:2.11
     command: tarantool /opt/tarantool/app.lua
     ports:
       - '3380:3380'

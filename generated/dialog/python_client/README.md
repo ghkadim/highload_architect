@@ -90,6 +90,7 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultApi* | [**dialog_user_id_list_get**](docs/DefaultApi.md#dialog_user_id_list_get) | **GET** /dialog/{user_id}/list | 
+*DefaultApi* | [**dialog_user_id_message_message_id_read_put**](docs/DefaultApi.md#dialog_user_id_message_message_id_read_put) | **PUT** /dialog/{user_id}/message/{message_id}/read | 
 *DefaultApi* | [**dialog_user_id_send_post**](docs/DefaultApi.md#dialog_user_id_send_post) | **POST** /dialog/{user_id}/send | 
 
 
