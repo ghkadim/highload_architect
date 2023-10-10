@@ -11,12 +11,12 @@
 import sys
 import unittest
 
-import openapi_client_dialog
-from openapi_client_dialog.model.dialog_user_id_send_post500_response import DialogUserIdSendPost500Response
+import openapi_client_counter
+from openapi_client_counter.model.counter_counter_id_get200_response import CounterCounterIdGet200Response
 
 
-class TestDialogUserIdSendPost500Response(unittest.TestCase):
-    """DialogUserIdSendPost500Response unit test stubs"""
+class TestCounterCounterIdGet200Response(unittest.TestCase):
+    """CounterCounterIdGet200Response unit test stubs"""
 
     def setUp(self):
         pass
@@ -24,10 +24,10 @@ class TestDialogUserIdSendPost500Response(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def testDialogUserIdSendPost500Response(self):
-        """Test DialogUserIdSendPost500Response"""
+    def testCounterCounterIdGet200Response(self):
+        """Test CounterCounterIdGet200Response"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = DialogUserIdSendPost500Response()  # noqa: E501
+        # model = CounterCounterIdGet200Response()  # noqa: E501
         pass
 
 

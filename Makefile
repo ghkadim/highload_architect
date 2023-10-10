@@ -89,22 +89,24 @@ compose_test: compose_build
 
 .PHONY: generate
 generate:
-	for service in app dialog ; do \
+	for service in app dialog counter; do \
   		mkdir -p generated/$$service/go_server; \
   		cp generated/go_server-openapi-generator-ignore generated/$$service/go_server/.openapi-generator-ignore; \
-		openapi-generator generate \
-			-i api/$$service/openapi.json \
+		docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli:v6.6.0 \
+			generate \
+			-i /local/api/$$service/openapi.json \
 			-g go-server \
-			-o generated/$$service/go_server || exit 1; \
+			-o /local/generated/$$service/go_server || exit 1; \
 		if [ "$$service" == "app" ]; then \
 			PACKAGE_NAME="openapi_client"; \
 		else \
 			PACKAGE_NAME="openapi_client_$$service"; \
 		fi; \
-		openapi-generator generate \
-			-i api/$$service/openapi.json \
+		docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli:v6.6.0 \
+			generate \
+			-i /local/api/$$service/openapi.json \
 			-g python-prior \
-			-o generated/$$service/python_client \
+			-o /local/generated/$$service/python_client \
 			--package-name=$$PACKAGE_NAME || exit 1; \
 		python3 generated/patch_go_server.py ./api/$$service/openapi.json \
 			| gofmt | tee generated/$$service/go_server/go/authorize_routes.go; \
@@ -112,4 +114,7 @@ generate:
 	protoc --go_out=${GOPATH}/src --go_opt=paths=import \
     	--go-grpc_out=${GOPATH}/src --go-grpc_opt=paths=import \
     	api/dialog/dialog.proto
+	protoc --go_out=${GOPATH}/src --go_opt=paths=import \
+    	--go-grpc_out=${GOPATH}/src --go-grpc_opt=paths=import \
+    	api/counter/counter.proto
 	go generate ./...

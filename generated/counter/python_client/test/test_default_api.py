@@ -8,26 +8,25 @@
 """
 
 
-import sys
 import unittest
 
-import openapi_client_dialog
-from openapi_client_dialog.model.dialog_message import DialogMessage
+import openapi_client_counter
+from openapi_client_counter.api.default_api import DefaultApi  # noqa: E501
 
 
-class TestDialogMessage(unittest.TestCase):
-    """DialogMessage unit test stubs"""
+class TestDefaultApi(unittest.TestCase):
+    """DefaultApi unit test stubs"""
 
     def setUp(self):
-        pass
+        self.api = DefaultApi()  # noqa: E501
 
     def tearDown(self):
         pass
 
-    def testDialogMessage(self):
-        """Test DialogMessage"""
-        # FIXME: construct object with mandatory attributes with example values
-        # model = DialogMessage()  # noqa: E501
+    def test_counter_counter_id_get(self):
+        """Test case for counter_counter_id_get
+
+        """
         pass
 
 
