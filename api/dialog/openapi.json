@@ -43,7 +43,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DialogMessageId"
+                  "properties": {
+                    "message_id": {
+                      "$ref": "#/components/schemas/DialogMessageId"
+                    }
+                  }
                 }
               }
             }
@@ -109,7 +113,7 @@
         }
       }
     },
-    "/dialog/{user_id}/message/{message_id}/read": {
+    "/dialog/message/{message_id}/read": {
       "put": {
         "security": [
           {
@@ -117,14 +121,6 @@
           }
         ],
         "parameters": [
-          {
-            "name": "user_id",
-            "schema": {
-              "$ref": "#/components/schemas/UserId"
-            },
-            "required": true,
-            "in": "path"
-          },
           {
             "name": "message_id",
             "schema": {

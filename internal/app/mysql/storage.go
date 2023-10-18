@@ -32,7 +32,7 @@ type Storage interface {
 	PostFeed(ctx context.Context, userID models.UserID, offset, limit int) ([]models.Post, error)
 	UserPosts(ctx context.Context, user models.UserID, limit int) ([]models.Post, error)
 	UserFriends(ctx context.Context, user models.UserID) ([]models.UserID, error)
-	DialogSend(ctx context.Context, message models.DialogMessage) error
+	DialogSend(ctx context.Context, message models.DialogMessage) (models.DialogMessageID, error)
 	DialogBulkInsert(ctx context.Context, messages []models.DialogMessage) error
 	DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error)
 	DialogMatchingShard(ctx context.Context, matchExpr string, fromID models.DialogMessageID, limit int64) ([]models.DialogMessage, error)
@@ -318,19 +318,23 @@ func shardRoute(query string, shardingID string) string {
 	return fmt.Sprintf("/* sharding_id=%s */ %s", shardingID, query)
 }
 
-func (s *storage) DialogSend(ctx context.Context, message models.DialogMessage) error {
+func (s *storage) DialogSend(ctx context.Context, message models.DialogMessage) (models.DialogMessageID, error) {
 	shardingID := s.dialogMessageShardingID(message.From, message.To)
 	if message.ID == 0 {
 		message.ID = models.DialogMessageID(s.dialogsIDGenerator.Generate())
 	}
-	var err error
-	_, err = s.db.ExecContext(ctx,
+	res, err := s.db.ExecContext(ctx,
 		shardRoute("INSERT INTO dialogs (id, from_user_id, to_user_id, text, sharding_id) VALUES (?,?,?,?,?)", shardingID),
 		message.ID, message.From, message.To, message.Text, shardingID)
 	if err != nil {
-		return fmt.Errorf("dialogSend: %v", err)
+		return 0, fmt.Errorf("dialogSend: %v", err)
 	}
-	return nil
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("dialogSend: %v", err)
+	}
+
+	return models.DialogMessageID(id), nil
 }
 
 func (s *storage) DialogBulkInsert(ctx context.Context, messages []models.DialogMessage) error {

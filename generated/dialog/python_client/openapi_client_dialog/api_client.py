@@ -804,10 +804,10 @@ class Endpoint(object):
         Example:
 
         api_instance = DefaultApi()
-        api_instance.dialog_user_id_list_get  # this is an instance of the class Endpoint
-        api_instance.dialog_user_id_list_get()  # this invokes api_instance.dialog_user_id_list_get.__call__()
+        api_instance.dialog_message_message_id_read_put  # this is an instance of the class Endpoint
+        api_instance.dialog_message_message_id_read_put()  # this invokes api_instance.dialog_message_message_id_read_put.__call__()
         which then invokes the callable functions stored in that endpoint at
-        api_instance.dialog_user_id_list_get.callable or self.callable in this class
+        api_instance.dialog_message_message_id_read_put.callable or self.callable in this class
 
         """
         return self.callable(self, *args, **kwargs)

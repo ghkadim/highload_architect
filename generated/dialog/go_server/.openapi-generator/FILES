@@ -7,6 +7,7 @@ go/error.go
 go/helpers.go
 go/impl.go
 go/logger.go
+go/model__dialog__user_id__send_post_200_response.go
 go/model__dialog__user_id__send_post_500_response.go
 go/model__dialog__user_id__send_post_request.go
 go/model_dialog_message.go

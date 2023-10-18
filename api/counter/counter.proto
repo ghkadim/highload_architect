@@ -9,8 +9,9 @@ service CounterService {
 }
 
 message AddRequest {
-  string counterName = 1;
-  int64 amount = 2;
+  string userID = 1;
+  string counterName = 2;
+  int64 amount = 3;
 }
 
 message AddReply {

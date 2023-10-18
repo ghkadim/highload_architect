@@ -25,7 +25,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DialogMessageId'
+                $ref: '#/components/schemas/_dialog__user_id__send_post_200_response'
           description: Успешно отправлено сообщение
         "400":
           description: Невалидные данные ввода
@@ -114,16 +114,9 @@ paths:
               style: simple
       security:
       - bearerAuth: []
-  /dialog/{user_id}/message/{message_id}/read:
+  /dialog/message/{message_id}/read:
     put:
       parameters:
-      - explode: false
-        in: path
-        name: user_id
-        required: true
-        schema:
-          $ref: '#/components/schemas/UserId'
-        style: simple
       - explode: false
         in: path
         name: message_id
@@ -242,6 +235,14 @@ components:
       required:
       - text
       type: object
+    _dialog__user_id__send_post_200_response:
+      example:
+        message_id: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+      properties:
+        message_id:
+          description: Идентификатор сообщения
+          example: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+          type: string
     _dialog__user_id__send_post_500_response:
       properties:
         message:

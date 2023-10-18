@@ -8,6 +8,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/gorilla/mux v1.8.0
 	github.com/stretchr/testify v1.8.3
+	github.com/tarantool/go-tarantool/v2 v2.0.0-20231018152154-bd6aab9db092
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.2.2
 	github.com/uptrace/opentelemetry-go-extra/otelzap v0.2.2
 	github.com/wagslane/go-rabbitmq v0.12.4
@@ -32,11 +33,17 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/klauspost/compress v1.10.3 // indirect
+	github.com/mattn/go-pointer v0.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.7.0 // indirect
+	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/tarantool/go-iproto v0.1.0 // indirect
+	github.com/tarantool/go-openssl v0.0.8-0.20231004103608-336ca939d2ca // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.2 // indirect
+	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect

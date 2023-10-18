@@ -11,11 +11,20 @@ package openapi
 
 type CounterCounterIdGet200Response struct {
 
-	Value int32 `json:"value,omitempty"`
+	Value int64 `json:"value"`
 }
 
 // AssertCounterCounterIdGet200ResponseRequired checks if the required fields are not zero-ed
 func AssertCounterCounterIdGet200ResponseRequired(obj CounterCounterIdGet200Response) error {
+	elements := map[string]interface{}{
+		"value": obj.Value,
+	}
+	for name, el := range elements {
+		if isZero := IsZeroValue(el); isZero {
+			return &RequiredError{Field: name}
+		}
+	}
+
 	return nil
 }
 

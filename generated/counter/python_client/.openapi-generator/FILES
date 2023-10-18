@@ -1,6 +1,5 @@
 .gitignore
 .gitlab-ci.yml
-.openapi-generator-ignore
 .travis.yml
 README.md
 docs/CounterCounterIdGet200Response.md
@@ -25,7 +24,4 @@ setup.cfg
 setup.py
 test-requirements.txt
 test/__init__.py
-test/test_counter_counter_id_get200_response.py
-test/test_counter_counter_id_get500_response.py
-test/test_default_api.py
 tox.ini

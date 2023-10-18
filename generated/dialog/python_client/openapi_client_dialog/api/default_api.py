@@ -22,6 +22,7 @@ from openapi_client_dialog.model_utils import (  # noqa: F401
     validate_and_convert_types
 )
 from openapi_client_dialog.model.dialog_message import DialogMessage
+from openapi_client_dialog.model.dialog_user_id_send_post200_response import DialogUserIdSendPost200Response
 from openapi_client_dialog.model.dialog_user_id_send_post500_response import DialogUserIdSendPost500Response
 from openapi_client_dialog.model.dialog_user_id_send_post_request import DialogUserIdSendPostRequest
 
@@ -37,6 +38,57 @@ class DefaultApi(object):
         if api_client is None:
             api_client = ApiClient()
         self.api_client = api_client
+        self.dialog_message_message_id_read_put_endpoint = _Endpoint(
+            settings={
+                'response_type': None,
+                'auth': [
+                    'bearerAuth'
+                ],
+                'endpoint_path': '/dialog/message/{message_id}/read',
+                'operation_id': 'dialog_message_message_id_read_put',
+                'http_method': 'PUT',
+                'servers': None,
+            },
+            params_map={
+                'all': [
+                    'message_id',
+                ],
+                'required': [
+                    'message_id',
+                ],
+                'nullable': [
+                ],
+                'enum': [
+                ],
+                'validation': [
+                ]
+            },
+            root_map={
+                'validations': {
+                },
+                'allowed_values': {
+                },
+                'openapi_types': {
+                    'message_id':
+                        (str,),
+                },
+                'attribute_map': {
+                    'message_id': 'message_id',
+                },
+                'location_map': {
+                    'message_id': 'path',
+                },
+                'collection_format_map': {
+                }
+            },
+            headers_map={
+                'accept': [
+                    'application/json'
+                ],
+                'content_type': [],
+            },
+            api_client=api_client
+        )
         self.dialog_user_id_list_get_endpoint = _Endpoint(
             settings={
                 'response_type': ([DialogMessage],),
@@ -88,66 +140,9 @@ class DefaultApi(object):
             },
             api_client=api_client
         )
-        self.dialog_user_id_message_message_id_read_put_endpoint = _Endpoint(
-            settings={
-                'response_type': None,
-                'auth': [
-                    'bearerAuth'
-                ],
-                'endpoint_path': '/dialog/{user_id}/message/{message_id}/read',
-                'operation_id': 'dialog_user_id_message_message_id_read_put',
-                'http_method': 'PUT',
-                'servers': None,
-            },
-            params_map={
-                'all': [
-                    'user_id',
-                    'message_id',
-                ],
-                'required': [
-                    'user_id',
-                    'message_id',
-                ],
-                'nullable': [
-                ],
-                'enum': [
-                ],
-                'validation': [
-                ]
-            },
-            root_map={
-                'validations': {
-                },
-                'allowed_values': {
-                },
-                'openapi_types': {
-                    'user_id':
-                        (str,),
-                    'message_id':
-                        (str,),
-                },
-                'attribute_map': {
-                    'user_id': 'user_id',
-                    'message_id': 'message_id',
-                },
-                'location_map': {
-                    'user_id': 'path',
-                    'message_id': 'path',
-                },
-                'collection_format_map': {
-                }
-            },
-            headers_map={
-                'accept': [
-                    'application/json'
-                ],
-                'content_type': [],
-            },
-            api_client=api_client
-        )
         self.dialog_user_id_send_post_endpoint = _Endpoint(
             settings={
-                'response_type': (str,),
+                'response_type': (DialogUserIdSendPost200Response,),
                 'auth': [
                     'bearerAuth'
                 ],
@@ -202,6 +197,88 @@ class DefaultApi(object):
             },
             api_client=api_client
         )
+
+    def dialog_message_message_id_read_put(
+        self,
+        message_id,
+        **kwargs
+    ):
+        """dialog_message_message_id_read_put  # noqa: E501
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.dialog_message_message_id_read_put(message_id, async_req=True)
+        >>> result = thread.get()
+
+        Args:
+            message_id (str):
+
+        Keyword Args:
+            _return_http_data_only (bool): response data without head status
+                code and headers. Default is True.
+            _preload_content (bool): if False, the urllib3.HTTPResponse object
+                will be returned without reading/decoding response data.
+                Default is True.
+            _request_timeout (int/float/tuple): timeout setting for this request. If
+                one number provided, it will be total request timeout. It can also
+                be a pair (tuple) of (connection, read) timeouts.
+                Default is None.
+            _check_input_type (bool): specifies if type checking
+                should be done one the data sent to the server.
+                Default is True.
+            _check_return_type (bool): specifies if type checking
+                should be done one the data received from the server.
+                Default is True.
+            _spec_property_naming (bool): True if the variable names in the input data
+                are serialized names, as specified in the OpenAPI document.
+                False if the variable names in the input data
+                are pythonic names, e.g. snake case (default)
+            _content_type (str/None): force body content-type.
+                Default is None and content-type will be predicted by allowed
+                content-types and body.
+            _host_index (int/None): specifies the index of the server
+                that we want to use.
+                Default is read from the configuration.
+            _request_auths (list): set to override the auth_settings for an a single
+                request; this effectively ignores the authentication
+                in the spec for a single request.
+                Default is None
+            async_req (bool): execute request asynchronously
+
+        Returns:
+            None
+                If the method is called asynchronously, returns the request
+                thread.
+        """
+        kwargs['async_req'] = kwargs.get(
+            'async_req', False
+        )
+        kwargs['_return_http_data_only'] = kwargs.get(
+            '_return_http_data_only', True
+        )
+        kwargs['_preload_content'] = kwargs.get(
+            '_preload_content', True
+        )
+        kwargs['_request_timeout'] = kwargs.get(
+            '_request_timeout', None
+        )
+        kwargs['_check_input_type'] = kwargs.get(
+            '_check_input_type', True
+        )
+        kwargs['_check_return_type'] = kwargs.get(
+            '_check_return_type', True
+        )
+        kwargs['_spec_property_naming'] = kwargs.get(
+            '_spec_property_naming', False
+        )
+        kwargs['_content_type'] = kwargs.get(
+            '_content_type')
+        kwargs['_host_index'] = kwargs.get('_host_index')
+        kwargs['_request_auths'] = kwargs.get('_request_auths', None)
+        kwargs['message_id'] = \
+            message_id
+        return self.dialog_message_message_id_read_put_endpoint.call_with_http_info(**kwargs)
 
     def dialog_user_id_list_get(
         self,
@@ -285,92 +362,6 @@ class DefaultApi(object):
             user_id
         return self.dialog_user_id_list_get_endpoint.call_with_http_info(**kwargs)
 
-    def dialog_user_id_message_message_id_read_put(
-        self,
-        user_id,
-        message_id,
-        **kwargs
-    ):
-        """dialog_user_id_message_message_id_read_put  # noqa: E501
-
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-
-        >>> thread = api.dialog_user_id_message_message_id_read_put(user_id, message_id, async_req=True)
-        >>> result = thread.get()
-
-        Args:
-            user_id (str):
-            message_id (str):
-
-        Keyword Args:
-            _return_http_data_only (bool): response data without head status
-                code and headers. Default is True.
-            _preload_content (bool): if False, the urllib3.HTTPResponse object
-                will be returned without reading/decoding response data.
-                Default is True.
-            _request_timeout (int/float/tuple): timeout setting for this request. If
-                one number provided, it will be total request timeout. It can also
-                be a pair (tuple) of (connection, read) timeouts.
-                Default is None.
-            _check_input_type (bool): specifies if type checking
-                should be done one the data sent to the server.
-                Default is True.
-            _check_return_type (bool): specifies if type checking
-                should be done one the data received from the server.
-                Default is True.
-            _spec_property_naming (bool): True if the variable names in the input data
-                are serialized names, as specified in the OpenAPI document.
-                False if the variable names in the input data
-                are pythonic names, e.g. snake case (default)
-            _content_type (str/None): force body content-type.
-                Default is None and content-type will be predicted by allowed
-                content-types and body.
-            _host_index (int/None): specifies the index of the server
-                that we want to use.
-                Default is read from the configuration.
-            _request_auths (list): set to override the auth_settings for an a single
-                request; this effectively ignores the authentication
-                in the spec for a single request.
-                Default is None
-            async_req (bool): execute request asynchronously
-
-        Returns:
-            None
-                If the method is called asynchronously, returns the request
-                thread.
-        """
-        kwargs['async_req'] = kwargs.get(
-            'async_req', False
-        )
-        kwargs['_return_http_data_only'] = kwargs.get(
-            '_return_http_data_only', True
-        )
-        kwargs['_preload_content'] = kwargs.get(
-            '_preload_content', True
-        )
-        kwargs['_request_timeout'] = kwargs.get(
-            '_request_timeout', None
-        )
-        kwargs['_check_input_type'] = kwargs.get(
-            '_check_input_type', True
-        )
-        kwargs['_check_return_type'] = kwargs.get(
-            '_check_return_type', True
-        )
-        kwargs['_spec_property_naming'] = kwargs.get(
-            '_spec_property_naming', False
-        )
-        kwargs['_content_type'] = kwargs.get(
-            '_content_type')
-        kwargs['_host_index'] = kwargs.get('_host_index')
-        kwargs['_request_auths'] = kwargs.get('_request_auths', None)
-        kwargs['user_id'] = \
-            user_id
-        kwargs['message_id'] = \
-            message_id
-        return self.dialog_user_id_message_message_id_read_put_endpoint.call_with_http_info(**kwargs)
-
     def dialog_user_id_send_post(
         self,
         user_id,
@@ -421,7 +412,7 @@ class DefaultApi(object):
             async_req (bool): execute request asynchronously
 
         Returns:
-            str
+            DialogUserIdSendPost200Response
                 If the method is called asynchronously, returns the request
                 thread.
         """

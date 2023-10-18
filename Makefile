@@ -1,6 +1,7 @@
 BINARY_APP_NAME=bin/app
 BINARY_DIALOG_NAME=bin/dialog
 BINARY_RESHARD_NAME=bin/reshard
+BINARY_COUNTER_NAME=bin/counter
 COMPOSE="docker-compose.yml"
 
 .PHONY: build
@@ -8,6 +9,7 @@ build: test
 	GOARCH=amd64 go build -o ${BINARY_APP_NAME} cmd/app/main.go
 	GOARCH=amd64 go build -o ${BINARY_DIALOG_NAME} cmd/dialog/main.go
 	GOARCH=amd64 go build -o ${BINARY_RESHARD_NAME} cmd/reshard/main.go
+	GOARCH=amd64 go build -tags go_tarantool_ssl_disable -o ${BINARY_COUNTER_NAME} cmd/counter/main.go
 
 .PHONY: run
 run:
@@ -18,7 +20,7 @@ build_and_run: build run
 
 .PHONY: test
 test:
-	go test ./...
+	go test ./... -tags go_tarantool_ssl_disable
 
 .PHONY: linter-install
 linter-install:
