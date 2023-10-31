@@ -94,7 +94,7 @@ func (s *Storage) DialogList(ctx context.Context, userID1, userID2 models.UserID
 }
 
 func (s *Storage) DialogMessageRead(ctx context.Context, userID models.UserID, messageID models.DialogMessageID) error {
-	u := fmt.Sprintf("%s/dialog?user_id=%s&message_id=%s", s.address, url.QueryEscape(string(userID)), strconv.FormatInt(int64(messageID), 10))
+	u := fmt.Sprintf("%s/dialog/message/read?user_id=%s&message_id=%s", s.address, url.QueryEscape(string(userID)), strconv.FormatInt(int64(messageID), 10))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, u, nil)
 	if err != nil {
 		return err

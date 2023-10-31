@@ -5,6 +5,7 @@ services:
     environment:
       - APP_HOST=http://app:8080
       - DIALOG_HOST=http://dialog:8080
+      - COUNTER_HOST=http://counter:8080
     command: bash -c "
         pip install -r /src/requirements.txt;
         make test_api

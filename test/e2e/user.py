@@ -69,15 +69,15 @@ class User:
         return res
 
     @property
-    def api(self):
+    def api(self) -> openapi_client.api.default_api.DefaultApi:
         return self._api
 
     @property
-    def dialog_api(self):
+    def dialog_api(self) -> openapi_client_dialog.api.default_api.DefaultApi:
         return self._dialog_api
 
     @property
-    def counter_api(self):
+    def counter_api(self) -> openapi_client_counter.api.default_api.DefaultApi:
         return self._counter_api
 
     @property

@@ -91,7 +91,7 @@ local dialog = {
         sk = search_key(dialog.from, dialog.to)
         id = 0
         box.atomic(function()
-            id = box.space.dialogs:insert({tuple[1], tuple[2], tuple[3], tuple[4], sk})[1]
+            id = box.space.dialogs:insert({[2] = tuple[2], [3] = tuple[3], [4] = tuple[4], [5] = sk})[1]
             box.space.message_info:insert({id, tuple[2], false})
             box.space.message_info:insert({id, tuple[3], false})
         end)
