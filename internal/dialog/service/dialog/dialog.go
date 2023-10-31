@@ -47,28 +47,28 @@ func (s *service) DialogSend(ctx context.Context, message models.DialogMessage) 
 	idPtr := &id
 	err := saga.New([]saga.Step{
 		{
-			func() error {
+			Trx: func() error {
 				return s.counter.CounterAdd(ctx, message.From, unreadMessagesCounter, 1)
 			},
-			func() error {
+			Compensate: func() error {
 				return s.counter.CounterAdd(ctx, message.From, unreadMessagesCounter, -1)
 			},
 		},
 		{
-			func() error {
+			Trx: func() error {
 				return s.counter.CounterAdd(ctx, message.To, unreadMessagesCounter, 1)
 			},
-			func() error {
+			Compensate: func() error {
 				return s.counter.CounterAdd(ctx, message.To, unreadMessagesCounter, -1)
 			},
 		},
 		{
-			func() error {
+			Trx: func() error {
 				var err error
 				*idPtr, err = s.storage.DialogSend(ctx, message)
 				return err
 			},
-			nil,
+			Compensate: nil,
 		},
 	}).Run()
 	return id, err
@@ -85,18 +85,18 @@ func (s *service) DialogList(ctx context.Context, userID1, userID2 models.UserID
 func (s *service) DialogMessageRead(ctx context.Context, userID models.UserID, messageID models.DialogMessageID) error {
 	return saga.New([]saga.Step{
 		{
-			func() error {
+			Trx: func() error {
 				return s.counter.CounterAdd(ctx, userID, unreadMessagesCounter, -1)
 			},
-			func() error {
+			Compensate: func() error {
 				return s.counter.CounterAdd(ctx, userID, unreadMessagesCounter, 1)
 			},
 		},
 		{
-			func() error {
+			Trx: func() error {
 				return s.storage.DialogMessageRead(ctx, userID, messageID)
 			},
-			nil,
+			Compensate: nil,
 		},
 	}).Run()
 }
