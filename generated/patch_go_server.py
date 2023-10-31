@@ -4,12 +4,12 @@ import sys
 with open(sys.argv[1]) as f:
     schema = json.load(f)
 
-authorizePaths = set()
+authorizePaths = list()
 
 for path, path_val in schema["paths"].items():
     for method, method_val in path_val.items():
         if "security" in method_val:
-            authorizePaths.add((path, method))
+            authorizePaths.append((path, method))
 
 
 print("""package openapi

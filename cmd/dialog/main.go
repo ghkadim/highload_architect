@@ -9,10 +9,11 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 
-	"github.com/ghkadim/highload_architect/internal/app/service/dialog"
 	"github.com/ghkadim/highload_architect/internal/config"
 	grpcController "github.com/ghkadim/highload_architect/internal/dialog/controller/grpc"
 	"github.com/ghkadim/highload_architect/internal/dialog/controller/openapi"
+	"github.com/ghkadim/highload_architect/internal/dialog/counter"
+	"github.com/ghkadim/highload_architect/internal/dialog/service/dialog"
 	"github.com/ghkadim/highload_architect/internal/dialog/tarantool"
 	"github.com/ghkadim/highload_architect/internal/grpc"
 	"github.com/ghkadim/highload_architect/internal/logger"
@@ -35,6 +36,11 @@ func main() {
 		config.Get("SESSION_KEY", "secret"),
 	)
 
+	counterCl, err := counter.NewClient(config.Get("COUNTER_ADDRESS", ""))
+	if err != nil {
+		logger.Fatalf("Failed to create counter client: %v", err)
+	}
+
 	dialogSvc := dialog.NewService(
 		tarantool.NewStorage(
 			config.Get("TARANTOOL_ADDRESS", ""),
@@ -42,6 +48,7 @@ func main() {
 				Transport: otelhttp.NewTransport(http.DefaultTransport),
 			},
 		),
+		counterCl,
 	)
 
 	httpServer := server.NewServer(

@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import openapi_client
-from openapi_client.model.dialog_message import DialogMessage
+import openapi_client_dialog
+from openapi_client_dialog.model.dialog_message import DialogMessage
 
 
 class TestDialogMessage(unittest.TestCase):

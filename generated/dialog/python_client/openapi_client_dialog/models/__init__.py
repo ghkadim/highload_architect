@@ -10,5 +10,6 @@
 # sys.setrecursionlimit(n)
 
 from openapi_client_dialog.model.dialog_message import DialogMessage
+from openapi_client_dialog.model.dialog_user_id_send_post200_response import DialogUserIdSendPost200Response
 from openapi_client_dialog.model.dialog_user_id_send_post500_response import DialogUserIdSendPost500Response
 from openapi_client_dialog.model.dialog_user_id_send_post_request import DialogUserIdSendPostRequest

@@ -51,6 +51,7 @@ import openapi_client_dialog
 from pprint import pprint
 from openapi_client_dialog.api import default_api
 from openapi_client_dialog.model.dialog_message import DialogMessage
+from openapi_client_dialog.model.dialog_user_id_send_post200_response import DialogUserIdSendPost200Response
 from openapi_client_dialog.model.dialog_user_id_send_post500_response import DialogUserIdSendPost500Response
 from openapi_client_dialog.model.dialog_user_id_send_post_request import DialogUserIdSendPostRequest
 # Defining the host is optional and defaults to http://localhost
@@ -74,13 +75,12 @@ configuration = openapi_client_dialog.Configuration(
 with openapi_client_dialog.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = default_api.DefaultApi(api_client)
-    user_id = "user_id_example" # str | 
+    message_id = "1d535fd6-7521-4cb1-aa6d-031be7123c4d" # str | 
 
     try:
-        api_response = api_instance.dialog_user_id_list_get(user_id)
-        pprint(api_response)
+        api_instance.dialog_message_message_id_read_put(message_id)
     except openapi_client_dialog.ApiException as e:
-        print("Exception when calling DefaultApi->dialog_user_id_list_get: %s\n" % e)
+        print("Exception when calling DefaultApi->dialog_message_message_id_read_put: %s\n" % e)
 ```
 
 ## Documentation for API Endpoints
@@ -89,6 +89,7 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*DefaultApi* | [**dialog_message_message_id_read_put**](docs/DefaultApi.md#dialog_message_message_id_read_put) | **PUT** /dialog/message/{message_id}/read | 
 *DefaultApi* | [**dialog_user_id_list_get**](docs/DefaultApi.md#dialog_user_id_list_get) | **GET** /dialog/{user_id}/list | 
 *DefaultApi* | [**dialog_user_id_send_post**](docs/DefaultApi.md#dialog_user_id_send_post) | **POST** /dialog/{user_id}/send | 
 
@@ -96,6 +97,7 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [DialogMessage](docs/DialogMessage.md)
+ - [DialogUserIdSendPost200Response](docs/DialogUserIdSendPost200Response.md)
  - [DialogUserIdSendPost500Response](docs/DialogUserIdSendPost500Response.md)
  - [DialogUserIdSendPostRequest](docs/DialogUserIdSendPostRequest.md)
 

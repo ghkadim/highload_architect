@@ -14,4 +14,9 @@ var AuthorizeRoutes = []struct {
 		Path:   "/dialog/{user_id}/list",
 		Method: "GET",
 	},
+
+	{
+		Path:   "/dialog/message/{message_id}/read",
+		Method: "PUT",
+	},
 }

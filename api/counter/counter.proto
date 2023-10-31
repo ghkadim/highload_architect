@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package counter;
+
+option go_package = "github.com/ghkadim/highload_architect/generated/counter/go_proto";
+
+service CounterService {
+  rpc Add(AddRequest) returns (AddReply) {}
+}
+
+message AddRequest {
+  string userID = 1;
+  string counterName = 2;
+  int64 amount = 3;
+}
+
+message AddReply {
+  int64 value = 1;
+}

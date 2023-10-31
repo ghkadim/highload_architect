@@ -12,7 +12,7 @@ import (
 )
 
 type dialog interface {
-	DialogSend(ctx context.Context, message models.DialogMessage) error
+	DialogSend(ctx context.Context, message models.DialogMessage) (models.DialogMessageID, error)
 	DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error)
 }
 
@@ -33,7 +33,7 @@ func (c *Controller) Register(grpcServer grpc.ServiceRegistrar) {
 }
 
 func (c *Controller) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendReply, error) {
-	err := c.dialog.DialogSend(ctx, models.DialogMessage{
+	_, err := c.dialog.DialogSend(ctx, models.DialogMessage{
 		From: models.UserID(req.Message.FromUser),
 		To:   models.UserID(req.Message.ToUser),
 		Text: req.Message.Text,

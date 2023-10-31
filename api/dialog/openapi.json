@@ -39,7 +39,18 @@
         },
         "responses": {
           "200": {
-            "description": "Успешно отправлено сообщение"
+            "description": "Успешно отправлено сообщение",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "message_id": {
+                      "$ref": "#/components/schemas/DialogMessageId"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/400"
@@ -86,6 +97,42 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "500": {
+            "$ref": "#/components/responses/5xx"
+          },
+          "503": {
+            "$ref": "#/components/responses/5xx"
+          }
+        }
+      }
+    },
+    "/dialog/message/{message_id}/read": {
+      "put": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "message_id",
+            "schema": {
+              "$ref": "#/components/schemas/DialogMessageId"
+            },
+            "required": true,
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешно изменено сообщение"
           },
           "400": {
             "$ref": "#/components/responses/400"
@@ -153,15 +200,27 @@
         "type": "string",
         "description": "Идентификатор пользователя"
       },
+      "DialogMessageId": {
+        "type": "string",
+        "description": "Идентификатор сообщения",
+        "example": "1d535fd6-7521-4cb1-aa6d-031be7123c4d"
+      },
       "DialogMessageText": {
         "type": "string",
         "description": "Текст сообщения",
         "example": "Привет, как дела?"
       },
+      "DialogMessageRead": {
+        "type": "boolean",
+        "description": "Сообщение прочитано"
+      },
       "DialogMessage": {
         "type": "object",
         "required": ["from", "to", "text"],
         "properties": {
+          "id": {
+            "$ref": "#/components/schemas/DialogMessageId"
+          },
           "from": {
             "$ref": "#/components/schemas/UserId"
           },
@@ -170,6 +229,9 @@
           },
           "text": {
             "$ref": "#/components/schemas/DialogMessageText"
+          },
+          "read": {
+            "$ref": "#/components/schemas/DialogMessageRead"
           }
         }
       }

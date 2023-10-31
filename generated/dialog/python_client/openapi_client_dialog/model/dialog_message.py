@@ -84,6 +84,8 @@ class DialogMessage(ModelNormal):
             '_from': (str,),  # noqa: E501
             'to': (str,),  # noqa: E501
             'text': (str,),  # noqa: E501
+            'id': (str,),  # noqa: E501
+            'read': (bool,),  # noqa: E501
         }
 
     @cached_property
@@ -95,6 +97,8 @@ class DialogMessage(ModelNormal):
         '_from': 'from',  # noqa: E501
         'to': 'to',  # noqa: E501
         'text': 'text',  # noqa: E501
+        'id': 'id',  # noqa: E501
+        'read': 'read',  # noqa: E501
     }
 
     read_only_vars = {
@@ -143,6 +147,8 @@ class DialogMessage(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
+            id (str): Идентификатор сообщения. [optional]  # noqa: E501
+            read (bool): Сообщение прочитано. [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -236,6 +242,8 @@ class DialogMessage(ModelNormal):
                                 Animal class but this time we won't travel
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
+            id (str): Идентификатор сообщения. [optional]  # noqa: E501
+            read (bool): Сообщение прочитано. [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)

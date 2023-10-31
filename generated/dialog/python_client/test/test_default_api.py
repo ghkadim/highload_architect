@@ -10,8 +10,8 @@
 
 import unittest
 
-import openapi_client
-from openapi_client.api.default_api import DefaultApi  # noqa: E501
+import openapi_client_dialog
+from openapi_client_dialog.api.default_api import DefaultApi  # noqa: E501
 
 
 class TestDefaultApi(unittest.TestCase):
@@ -25,6 +25,12 @@ class TestDefaultApi(unittest.TestCase):
 
     def test_dialog_user_id_list_get(self):
         """Test case for dialog_user_id_list_get
+
+        """
+        pass
+
+    def test_dialog_user_id_message_message_id_read_put(self):
+        """Test case for dialog_user_id_message_message_id_read_put
 
         """
         pass

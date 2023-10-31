@@ -4,6 +4,7 @@
 README.md
 docs/DefaultApi.md
 docs/DialogMessage.md
+docs/DialogUserIdSendPost200Response.md
 docs/DialogUserIdSendPost500Response.md
 docs/DialogUserIdSendPostRequest.md
 git_push.sh
@@ -16,6 +17,7 @@ openapi_client_dialog/configuration.py
 openapi_client_dialog/exceptions.py
 openapi_client_dialog/model/__init__.py
 openapi_client_dialog/model/dialog_message.py
+openapi_client_dialog/model/dialog_user_id_send_post200_response.py
 openapi_client_dialog/model/dialog_user_id_send_post500_response.py
 openapi_client_dialog/model/dialog_user_id_send_post_request.py
 openapi_client_dialog/model_utils.py

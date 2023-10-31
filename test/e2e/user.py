@@ -1,7 +1,9 @@
 import openapi_client
 import openapi_client_dialog
+import openapi_client_counter
 from openapi_client.api import default_api
 from openapi_client_dialog.api import default_api
+from openapi_client_counter.api import default_api
 from openapi_client.model.user_register_post_request import UserRegisterPostRequest
 from openapi_client.model.login_post_request import LoginPostRequest
 
@@ -14,6 +16,7 @@ class User:
                  user_id=None):
         self._api = openapi_client.api.default_api.DefaultApi()
         self._dialog_api = None
+        self._counter_api = None
         self.first_name = first_name
         self.second_name = second_name
         self.password = password
@@ -59,15 +62,23 @@ class User:
         conf = openapi_client_dialog.Configuration.get_default_copy()
         conf.access_token = res.token
         self._dialog_api = openapi_client_dialog.api.default_api.DefaultApi(openapi_client_dialog.ApiClient(conf))
+
+        conf = openapi_client_counter.Configuration.get_default_copy()
+        conf.access_token = res.token
+        self._counter_api = openapi_client_counter.api.default_api.DefaultApi(openapi_client_counter.ApiClient(conf))
         return res
 
     @property
-    def api(self):
+    def api(self) -> openapi_client.api.default_api.DefaultApi:
         return self._api
 
     @property
-    def dialog_api(self):
+    def dialog_api(self) -> openapi_client_dialog.api.default_api.DefaultApi:
         return self._dialog_api
+
+    @property
+    def counter_api(self) -> openapi_client_counter.api.default_api.DefaultApi:
+        return self._counter_api
 
     @property
     def access_token(self):

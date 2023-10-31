@@ -913,7 +913,7 @@ with openapi_client.ApiClient() as api_client:
         first_name="Имя",
         second_name="Фамилия",
         age=18,
-        birthdate=dateutil_parser('Wed Feb 01 03:00:00 MSK 2017').date(),
+        birthdate=dateutil_parser('Wed Feb 01 00:00:00 UTC 2017').date(),
         biography="Хобби, интересы и т.п.",
         city="Москва",
         password="Секретная строка",

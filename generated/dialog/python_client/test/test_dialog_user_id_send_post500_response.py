@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import openapi_client
-from openapi_client.model.dialog_user_id_send_post500_response import DialogUserIdSendPost500Response
+import openapi_client_dialog
+from openapi_client_dialog.model.dialog_user_id_send_post500_response import DialogUserIdSendPost500Response
 
 
 class TestDialogUserIdSendPost500Response(unittest.TestCase):

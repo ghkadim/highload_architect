@@ -2,6 +2,7 @@ import pytest
 import os
 import openapi_client
 import openapi_client_dialog
+import openapi_client_counter
 from user import User
 from asyncapi import AsyncApi
 
@@ -18,6 +19,13 @@ def configure_dialog_host():
     conf = openapi_client_dialog.Configuration.get_default_copy()
     conf.host = os.environ.get("DIALOG_HOST", "http://localhost:8180")
     openapi_client_dialog.Configuration.set_default(conf)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def configure_counter_host():
+    conf = openapi_client_counter.Configuration.get_default_copy()
+    conf.host = os.environ.get("COUNTER_HOST", "http://localhost:8182")
+    openapi_client_counter.Configuration.set_default(conf)
 
 
 # @pytest.fixture(autouse=True, scope="session")

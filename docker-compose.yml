@@ -35,11 +35,12 @@ services:
         APPLICATION: dialog
     environment:
       DEBUG: ${DEBUG:-false}
-      TARANTOOL_ADDRESS: 'http://tarantool:3380'
+      TARANTOOL_ADDRESS: 'http://tarantool_dialog:3380'
+      COUNTER_ADDRESS: 'counter:8081'
       OTEL_SERVICE_NAME: 'dialog'
       OTEL_EXPORTER_JAEGER_ENDPOINT: 'http://jaeger:14268/api/traces'
     depends_on:
-      tarantool:
+      tarantool_dialog:
         condition: service_started
     ports:
       - '8180:8080'
@@ -47,6 +48,28 @@ services:
     expose:
       - '8081'
       - '8180'
+  counter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APPLICATION: counter
+    environment:
+      DEBUG: ${DEBUG:-false}
+      TARANTOOL_ADDRESS: 'tarantool_counter:3301'
+      TARANTOOL_USERNAME: 'storage'
+      TARANTOOL_PASSWORD: 'passw0rd'
+      OTEL_SERVICE_NAME: 'counter'
+      OTEL_EXPORTER_JAEGER_ENDPOINT: 'http://jaeger:14268/api/traces'
+    depends_on:
+      tarantool_counter:
+        condition: service_started
+    ports:
+      - '8182:8080'
+      - '8082:8081'
+    expose:
+      - '8082'
+      - '8182'
   db:
     image: mysql:8.0
     restart: always
@@ -75,16 +98,26 @@ services:
       retries: 3
     expose:
       - '5672'
-  tarantool:
-    image: tarantool/tarantool:2.3.1
+  tarantool_dialog:
+    image: tarantool/tarantool:2.11
     command: tarantool /opt/tarantool/app.lua
     ports:
       - '3380:3380'
     expose:
       - '3380'
     volumes:
-      - tarantool-db:/var/lib/tarantool
-      - ${PWD}/tarantool/src:/opt/tarantool
+      - tarantool_dialog-db:/var/lib/tarantool
+      - ${PWD}/tarantool/dialog:/opt/tarantool
+  tarantool_counter:
+    image: tarantool/tarantool:2.11
+    command: tarantool /opt/tarantool/app.lua
+    ports:
+      - '3301:3301'
+    expose:
+      - '3301'
+    volumes:
+      - tarantool_counter-db:/var/lib/tarantool
+      - ${PWD}/tarantool/counter:/opt/tarantool
   jaeger:
     image: jaegertracing/all-in-one:1.6
     ports:
@@ -97,4 +130,5 @@ services:
       - '9411:9411'
 volumes:
   my-db:
-  tarantool-db:
+  tarantool_dialog-db:
+  tarantool_counter-db:

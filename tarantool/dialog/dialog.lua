@@ -9,7 +9,8 @@ local schema = {
             {name='id', type='long*'},
             {name='from', type='string'},
             {name='to', type='string'},
-            {name='text', type='string'}
+            {name='text', type='string'},
+            {name='read', type='boolean*'},
         }
     }
 }
@@ -27,13 +28,23 @@ local dialog = {
                 {name='from', type='string'},
                 {name='to', type='string'},
                 {name='text', type='string'},
-                {name='search_key', type='string'}
+                {name='search_key', type='string'},
             })
             box.space.dialogs:create_index(
                     'primary', {type = 'tree', parts = {'id'}, sequence='dialog_id'}
             )
             box.space.dialogs:create_index(
                     'search_key', {type = 'tree', parts = {'search_key', 'id'}}
+            )
+
+            box.schema.create_space('message_info')
+            box.space.message_info:format({
+                {name='message_id', type='unsigned'},
+                {name='user_id', type='string'},
+                {name='read', type='boolean'}
+            })
+            box.space.message_info:create_index(
+                    'primary', {type = 'tree', parts = {'message_id', 'user_id'}}
             )
         end)
 
@@ -47,10 +58,10 @@ local dialog = {
                 log.info('Started')
                 return true
             else
-                log.error('Schema compilation failed')
+                error('Schema compilation failed: ' .. compiled_dialog)
             end
         else
-            log.info('Schema creation failed')
+            error('Schema creation failed: ' .. dialog)
         end
         return false
     end,
@@ -61,7 +72,11 @@ local dialog = {
         local sk = search_key(user1, user2)
         for _, tuple in box.space.dialogs.index.search_key:pairs(sk, {iterator = box.index.LE}) do
             if (tuple[5] ~= sk) then break end
-            local _, dialog = self.dialog_model.unflatten({tuple[1], tuple[2], tuple[3], tuple[4]})
+            msg_read = box.space.message_info:get({tuple[1], user1})['read']
+            local ok, dialog = self.dialog_model.unflatten({tuple[1], tuple[2], tuple[3], tuple[4], msg_read})
+            if not ok then
+                error({code = 500, message = dialog})
+            end
             table.insert(result, dialog)
         end
         return result
@@ -73,8 +88,18 @@ local dialog = {
         if not ok then
             error({code = 400, message = tuple})
         end
-        tuple[5] = search_key(dialog.from, dialog.to)
-        box.space.dialogs:insert(tuple)
+        sk = search_key(dialog.from, dialog.to)
+        id = 0
+        box.atomic(function()
+            id = box.space.dialogs:insert({[2] = tuple[2], [3] = tuple[3], [4] = tuple[4], [5] = sk})[1]
+            box.space.message_info:insert({id, tuple[2], false})
+            box.space.message_info:insert({id, tuple[3], false})
+        end)
+        return id
+    end,
+
+    read = function(self, message_id, read_by_user)
+        box.space.message_info:update({message_id, read_by_user}, {{'=', 3, true}})
     end,
 }
 

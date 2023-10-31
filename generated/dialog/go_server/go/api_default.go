@@ -51,6 +51,12 @@ func NewDefaultApiController(s DefaultApiServicer, opts ...DefaultApiOption) Rou
 func (c *DefaultApiController) Routes() Routes {
 	return Routes{ 
 		{
+			"DialogMessageMessageIdReadPut",
+			strings.ToUpper("Put"),
+			"/dialog/message/{message_id}/read",
+			c.DialogMessageMessageIdReadPut,
+		},
+		{
 			"DialogUserIdListGet",
 			strings.ToUpper("Get"),
 			"/dialog/{user_id}/list",
@@ -63,6 +69,21 @@ func (c *DefaultApiController) Routes() Routes {
 			c.DialogUserIdSendPost,
 		},
 	}
+}
+
+// DialogMessageMessageIdReadPut - 
+func (c *DefaultApiController) DialogMessageMessageIdReadPut(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	messageIdParam := params["message_id"]
+	result, err := c.service.DialogMessageMessageIdReadPut(r.Context(), messageIdParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
 }
 
 // DialogUserIdListGet - 

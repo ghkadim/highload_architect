@@ -22,6 +22,10 @@ paths:
               $ref: '#/components/schemas/_dialog__user_id__send_post_request'
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_dialog__user_id__send_post_200_response'
           description: Успешно отправлено сообщение
         "400":
           description: Невалидные данные ввода
@@ -110,6 +114,53 @@ paths:
               style: simple
       security:
       - bearerAuth: []
+  /dialog/message/{message_id}/read:
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: message_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/DialogMessageId'
+        style: simple
+      responses:
+        "200":
+          description: Успешно изменено сообщение
+        "400":
+          description: Невалидные данные ввода
+        "401":
+          description: Неавторизованный доступ
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_dialog__user_id__send_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_dialog__user_id__send_post_500_response'
+          description: Ошибка сервера
+          headers:
+            Retry-After:
+              description: "Время, через которое еще раз нужно сделать запрос"
+              explode: false
+              required: false
+              schema:
+                type: integer
+              style: simple
+      security:
+      - bearerAuth: []
 components:
   responses:
     "400":
@@ -134,16 +185,29 @@ components:
     UserId:
       description: Идентификатор пользователя
       type: string
+    DialogMessageId:
+      description: Идентификатор сообщения
+      example: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+      type: string
     DialogMessageText:
       description: Текст сообщения
       example: "Привет, как дела?"
       type: string
+    DialogMessageRead:
+      description: Сообщение прочитано
+      type: boolean
     DialogMessage:
       example:
+        read: true
         from: from
+        id: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
         to: to
         text: "Привет, как дела?"
       properties:
+        id:
+          description: Идентификатор сообщения
+          example: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+          type: string
         from:
           description: Идентификатор пользователя
           type: string
@@ -154,6 +218,9 @@ components:
           description: Текст сообщения
           example: "Привет, как дела?"
           type: string
+        read:
+          description: Сообщение прочитано
+          type: boolean
       required:
       - from
       - text
@@ -168,6 +235,14 @@ components:
       required:
       - text
       type: object
+    _dialog__user_id__send_post_200_response:
+      example:
+        message_id: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+      properties:
+        message_id:
+          description: Идентификатор сообщения
+          example: 1d535fd6-7521-4cb1-aa6d-031be7123c4d
+          type: string
     _dialog__user_id__send_post_500_response:
       properties:
         message:

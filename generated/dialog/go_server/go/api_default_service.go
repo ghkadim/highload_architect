@@ -26,6 +26,29 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
+// DialogMessageMessageIdReadPut - 
+func (s *DefaultApiService) DialogMessageMessageIdReadPut(ctx context.Context, messageId string) (ImplResponse, error) {
+	// TODO - update DialogMessageMessageIdReadPut with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
+	//return Response(200, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	//return Response(400, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
+	//return Response(401, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(500, DialogUserIdSendPost500Response{}) or use other options such as http.Ok ...
+	//return Response(500, DialogUserIdSendPost500Response{}), nil
+
+	//TODO: Uncomment the next line to return response Response(503, DialogUserIdSendPost500Response{}) or use other options such as http.Ok ...
+	//return Response(503, DialogUserIdSendPost500Response{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("DialogMessageMessageIdReadPut method not implemented")
+}
+
 // DialogUserIdListGet - 
 func (s *DefaultApiService) DialogUserIdListGet(ctx context.Context, userId string) (ImplResponse, error) {
 	// TODO - update DialogUserIdListGet with the required logic for this service method.
@@ -54,8 +77,8 @@ func (s *DefaultApiService) DialogUserIdSendPost(ctx context.Context, userId str
 	// TODO - update DialogUserIdSendPost with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
+	//TODO: Uncomment the next line to return response Response(200, DialogUserIdSendPost200Response{}) or use other options such as http.Ok ...
+	//return Response(200, DialogUserIdSendPost200Response{}), nil
 
 	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	//return Response(400, nil),nil

@@ -7,7 +7,7 @@ import (
 )
 
 type storage interface {
-	DialogSend(ctx context.Context, message models.DialogMessage) error
+	DialogSend(ctx context.Context, message models.DialogMessage) (models.DialogMessageID, error)
 	DialogList(ctx context.Context, userID1, userID2 models.UserID) ([]models.DialogMessage, error)
 }
 
@@ -29,7 +29,7 @@ func NewService(
 }
 
 func (s *service) DialogSend(ctx context.Context, message models.DialogMessage) error {
-	err := s.storage.DialogSend(ctx, message)
+	_, err := s.storage.DialogSend(ctx, message)
 	if err != nil {
 		return err
 	}
