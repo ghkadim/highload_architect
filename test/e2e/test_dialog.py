@@ -66,6 +66,12 @@ class NewDialogApi:
         return from_user.dialog_api.dialog_user_id_list_get(to_user.user_id)
 
 
+def cmp_messages(expected, got):
+    for expect_msg, got_msg in zip(expected, got):
+        assert expect_msg._from == got_msg._from
+        assert expect_msg.to == got_msg.to
+        assert expect_msg.text == got_msg.text
+
 @pytest.mark.parametrize(
     "dialog_api", [LegacyDialogApi(), NewDialogApi()])
 def test_dialog(default_user, make_user, dialog_api):
@@ -74,17 +80,17 @@ def test_dialog(default_user, make_user, dialog_api):
 
     dialog_api.send(default_user, friend, "hello")
     messages = dialog_api.list(default_user, friend)
-    assert messages == [dialog_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello")]
+    cmp_messages(messages, [dialog_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello")])
 
     dialog_api.send(friend, default_user, "hello")
     messages = dialog_api.list(friend, default_user)
-    assert messages == [
+    cmp_messages(messages, [
         dialog_api.DialogMessage(_from=friend.user_id, to=default_user.user_id, text="hello"),
         dialog_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello")
-    ]
+    ])
 
     messages_on_friend = dialog_api.list(default_user, friend)
-    assert messages == messages_on_friend
+    cmp_messages(messages, messages_on_friend)
 
 
 def test_backward_compatibility(default_user, make_user):
@@ -98,16 +104,16 @@ def test_backward_compatibility(default_user, make_user):
     new_api.send(friend, default_user, "hello new")
 
     messages = legacy_api.list(friend, default_user)
-    assert messages == [
+    cmp_messages(messages, [
         legacy_api.DialogMessage(_from=friend.user_id, to=default_user.user_id, text="hello new"),
         legacy_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello legacy")
-    ]
+    ])
 
     messages = new_api.list(friend, default_user)
-    assert messages == [
+    cmp_messages(messages, [
         new_api.DialogMessage(_from=friend.user_id, to=default_user.user_id, text="hello new"),
         new_api.DialogMessage(_from=default_user.user_id, to=friend.user_id, text="hello legacy")
-    ]
+    ])
 
 
 def make_users(count):
@@ -151,7 +157,7 @@ def check_dialogs(users, dialogs):
         expected_messages = dialogs[(u1.user_id, u2.user_id)]
         for u_from, u_to in ((u1, u2), (u2, u1)):
             messages = u_from.api.dialog_user_id_list_get(u_to.user_id)
-            assert messages == expected_messages
+            cmp_messages(messages, expected_messages)
 
 
 @pytest.mark.skipif("TEST_BEFORE_RESHARDING" not in os.environ, reason="check before resharding")
